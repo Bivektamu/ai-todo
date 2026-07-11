@@ -39,4 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma
+/dev.db
+
+# test artifacts
+/test-results/
+page.html
+server-err.txt
+server-out.txt
+
 .aider*
