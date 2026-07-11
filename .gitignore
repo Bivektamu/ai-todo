@@ -50,3 +50,9 @@ server-err.txt
 server-out.txt
 
 .aider*
+
+# temp scripts
+set-vercel-env.cjs
+push-db.cjs
+
+.vercel
