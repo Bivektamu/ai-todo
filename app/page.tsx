@@ -10,9 +10,16 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const todos = await prisma.todo.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  let todos;
+  try {
+    todos = await prisma.todo.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Prisma findMany failed:", message);
+    throw error;
+  }
 
   return (
     <div className="flex flex-col flex-1 items-center bg-zinc-50 font-sans dark:bg-black">
