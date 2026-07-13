@@ -10,6 +10,7 @@ Build approach: Skateboard — ship the thinnest usable whole first, then thicke
 | 2 | Coding standards & tooling | Foundation | lean | no | existing |
 | 3 | Data model | Foundation | lean | yes | done |
 | 4 | Todo CRUD | Skateboard | medium | yes | done |
+| 5 | Replace Turso with Neon Postgres | Foundation | medium | yes | done |
 
 ## Foundation
 
@@ -49,6 +50,29 @@ Status: done
 
 - [x] Design it: `/architect data-model`
 
+### 5. Replace Turso with Neon Postgres
+
+Intent: swap the persistence layer from SQLite (libsql adapter, Turso compatible) to Neon's serverless Postgres. The app's CRUD behavior stays the same; only the database underneath changes.
+
+Done when: the Prisma schema uses the `postgresql` provider, the adapter is `@prisma/adapter-neon`, a Neon connection string is wired via `DATABASE_URL`, and all four CRUD operations (create, read, toggle, delete) pass their existing tests.
+
+Weight: medium
+
+ADR: [003-neon-migration](../adr/003-neon-migration.md)
+
+Code area: `lib/prisma.ts`, `prisma.config.ts`, `app/generated/prisma/schema.prisma`, `app/actions.ts`
+
+Status: done
+
+- [x] Design it: `/blueprint neon-migration`
+- [x] Build it: `/develop neon-migration`
+  - [x] Swap adapter in `lib/prisma.ts`
+  - [x] Change schema provider to `postgresql`
+  - [x] Regenerate Prisma client
+  - [x] Wire Neon `DATABASE_URL`
+- [x] Verify it: `/verify neon-migration`
+- [x] Test it: `/test neon-migration`
+
 ### 4. Todo CRUD
 
 Intent: a single page where the user can create a todo, see the full list, toggle complete/incomplete, and delete items — the thinnest working whole.
@@ -78,18 +102,9 @@ Status: done
 
 ## /roadmap complete
 
-**Mode**: plan (brownfield)
+**Mode**: add
 
-**Build approach**: Skateboard — thinnest usable whole first
+**Feature enrolled**:
+- 5. Replace Turso with Neon Postgres — medium, needs ADR, inherits Skateboard approach
 
-**Features**: 2 existing · 2 planned
-
-**Enrolled as existing** (pre-workflow, from the scaffold):
-- Stack & architecture (Next.js 16, React 19, TypeScript, Tailwind, Prisma/SQLite)
-- Coding standards & tooling (ESLint, strict TS, React Compiler)
-
-**Planned** (next slice, in build order):
-- 3. Data model — lean, needs ADR → `/architect data-model`
-- 4. Todo CRUD — medium, needs ADR → `/architect todo-crud`
-
-**Recommended next**: `/architect data-model` to design the Todo schema, then `/architect todo-crud` for the page design.
+**Recommended next**: `/blueprint neon-migration` to design the adapter choice, schema migration, and connection strategy.

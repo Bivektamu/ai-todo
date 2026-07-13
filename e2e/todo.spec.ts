@@ -7,8 +7,11 @@ test.describe("Todo CRUD", () => {
     // Clean up any existing todos from previous runs
     const deleteButtons = page.getByRole("button", { name: "Delete todo" });
     while ((await deleteButtons.count()) > 0) {
-      await deleteButtons.first().click();
-      await page.waitForTimeout(300);
+      const btn = deleteButtons.first();
+      await btn.click();
+      // Wait for this specific button to disappear (RSC re-render complete)
+      // toBeHidden retries until the element is detached from the DOM
+      await expect(btn).toBeHidden({ timeout: 5000 });
     }
   });
 

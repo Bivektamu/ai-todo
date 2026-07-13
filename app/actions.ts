@@ -10,9 +10,13 @@ export async function createTodo(formData: FormData) {
     return;
   }
 
-  await prisma.todo.create({
-    data: { title: title.trim() },
-  });
+  try {
+    await prisma.todo.create({
+      data: { title: title.trim() },
+    });
+  } catch (error) {
+    console.error("Failed to create todo:", error);
+  }
 
   revalidatePath("/");
 }
@@ -24,18 +28,22 @@ export async function toggleTodo(formData: FormData) {
     return;
   }
 
-  const todo = await prisma.todo.findUnique({
-    where: { id: parseInt(id, 10) },
-  });
+  try {
+    const todo = await prisma.todo.findUnique({
+      where: { id: parseInt(id, 10) },
+    });
 
-  if (!todo) {
-    return;
+    if (!todo) {
+      return;
+    }
+
+    await prisma.todo.update({
+      where: { id: todo.id },
+      data: { completed: !todo.completed },
+    });
+  } catch (error) {
+    console.error("Failed to toggle todo:", error);
   }
-
-  await prisma.todo.update({
-    where: { id: todo.id },
-    data: { completed: !todo.completed },
-  });
 
   revalidatePath("/");
 }
@@ -47,9 +55,13 @@ export async function deleteTodo(formData: FormData) {
     return;
   }
 
-  await prisma.todo.delete({
-    where: { id: parseInt(id, 10) },
-  });
+  try {
+    await prisma.todo.delete({
+      where: { id: parseInt(id, 10) },
+    });
+  } catch (error) {
+    console.error("Failed to delete todo:", error);
+  }
 
   revalidatePath("/");
 }
