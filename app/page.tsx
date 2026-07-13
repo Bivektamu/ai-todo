@@ -3,6 +3,8 @@ import { TodoForm } from "@/components/TodoForm";
 import { TodoList } from "@/components/TodoList";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Todo",
 };
