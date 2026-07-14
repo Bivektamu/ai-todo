@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { TodoForm } from "@/components/TodoForm";
-import { TodoList } from "@/components/TodoList";
+import { TodoFilter } from "@/components/TodoFilter";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export default async function Home() {
         </h1>
         <TodoForm />
         <div className="mt-6">
-          <TodoList todos={todos} />
+          <TodoFilter todos={todos} />
         </div>
       </main>
     </div>

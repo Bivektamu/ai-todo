@@ -35,6 +35,34 @@ describe("TodoForm", () => {
     render(<TodoForm />);
 
     const form = screen.getByRole("textbox").closest("form");
-    expect(form).toHaveClass("flex", "gap-2");
+    expect(form).toHaveClass("flex", "flex-col", "gap-3");
+  });
+
+  // AC-2: Priority select in creation form
+  it("renders a priority dropdown with three options (covers: AC-2)", () => {
+    render(<TodoForm />);
+
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(3);
+    expect(options[0]).toHaveTextContent("Low");
+    expect(options[1]).toHaveTextContent("Medium");
+    expect(options[2]).toHaveTextContent("High");
+  });
+
+  it("priority select defaults to MEDIUM (covers: AC-2)", () => {
+    const { container } = render(<TodoForm />);
+
+    const select = container.querySelector('select[name="priority"]') as HTMLSelectElement;
+    expect(select).not.toBeNull();
+    expect(select.value).toBe("MEDIUM");
+  });
+
+  // AC-1: Due date input in creation form
+  it("renders a date input for due date (covers: AC-1)", () => {
+    const { container } = render(<TodoForm />);
+
+    const dateInput = container.querySelector('input[type="date"]') as HTMLInputElement;
+    expect(dateInput).not.toBeNull();
+    expect(dateInput).toHaveAttribute("name", "dueDate");
   });
 });

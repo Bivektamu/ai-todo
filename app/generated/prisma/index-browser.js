@@ -124,6 +124,8 @@ exports.Prisma.TodoScalarFieldEnum = {
   id: 'id',
   title: 'title',
   completed: 'completed',
+  priority: 'priority',
+  dueDate: 'dueDate',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -138,6 +140,15 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+exports.Priority = exports.$Enums.Priority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH'
+};
 
 exports.Prisma.ModelName = {
   Todo: 'Todo'

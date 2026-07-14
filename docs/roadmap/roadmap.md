@@ -11,6 +11,7 @@ Build approach: Skateboard — ship the thinnest usable whole first, then thicke
 | 3 | Data model | Foundation | lean | yes | done |
 | 4 | Todo CRUD | Skateboard | medium | yes | done |
 | 5 | Replace Turso with Neon Postgres | Foundation | medium | yes | done |
+| 6 | Todo enrichments | Skateboard | medium | yes | done |
 
 ## Foundation
 
@@ -95,6 +96,30 @@ Status: done
 - [x] Verify it: `/verify todo-crud`
 - [x] Test it: `/test todo-crud`
 
+### 6. Todo enrichments
+
+Intent: thicken the skateboard todo with due dates (optional deadline with overdue highlighting), priority levels (low/medium/high with color badges), and a filter bar (all/active/completed toggles, sort by priority or due date).
+
+Done when: user can set a due date and priority on any todo; the list shows priority badges and overdue visual cues; a filter bar toggles all/active/completed and re-sorts by priority or due date; existing CRUD still works; all existing tests pass.
+
+Weight: medium
+
+ADR: [004-todo-enrichments](../adr/004-todo-enrichments.md)
+
+Code area: `app/generated/prisma/schema.prisma`, `app/actions.ts`, `components/TodoForm.tsx`, `components/TodoList.tsx`, `components/TodoFilter.tsx`, `app/page.tsx`
+
+Status: done
+
+- [x] Design it (ADR)
+- [x] Build it: `/develop todo-enrichments`
+  - [x] Schema migration: add Priority enum + dueDate field (AC-1, AC-2)
+  - [x] Server actions: extend createTodo, add updateTodo (AC-1, AC-2, AC-5)
+  - [x] TodoForm: priority select + date input (AC-1, AC-2)
+  - [x] TodoList: priority badges, due date display, inline editing (AC-1, AC-2, AC-4)
+  - [x] Filter bar + page integration (AC-3, AC-1, AC-5)
+- [x] Verify it: `/verify todo-enrichments`
+- [x] Test it: `/test todo-enrichments`
+
 ## Legend
 
 - **Weight**: lean (skip design-review and harden) · medium (normal path) · full (design-review and harden required)
@@ -105,6 +130,6 @@ Status: done
 **Mode**: add
 
 **Feature enrolled**:
-- 5. Replace Turso with Neon Postgres — medium, needs ADR, inherits Skateboard approach
+- 6. Todo enrichments — medium, needs ADR, inherits Skateboard approach. Due dates, priority levels (low/medium/high), and a filter bar (all/active/completed, sort by priority or due date).
 
-**Recommended next**: `/blueprint neon-migration` to design the adapter choice, schema migration, and connection strategy.
+**Recommended next**: `/blueprint todo-enrichments` to design the data model changes, filter strategy, and priority representation.

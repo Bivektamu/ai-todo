@@ -5,12 +5,15 @@ import { TodoList } from "@/components/TodoList";
 vi.mock("@/app/actions", () => ({
   toggleTodo: vi.fn(),
   deleteTodo: vi.fn(),
+  updateTodo: vi.fn(),
 }));
 
 function makeTodo(overrides: Partial<{
   id: number;
   title: string;
   completed: boolean;
+  priority: "LOW" | "MEDIUM" | "HIGH";
+  dueDate: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }> = {}) {
@@ -18,6 +21,8 @@ function makeTodo(overrides: Partial<{
     id: 1,
     title: "Test todo",
     completed: false,
+    priority: "MEDIUM" as const,
+    dueDate: null as Date | null,
     createdAt: new Date("2025-01-01"),
     updatedAt: new Date("2025-01-01"),
     ...overrides,
@@ -116,5 +121,93 @@ describe("TodoList", () => {
 
     expect(screen.getAllByRole("button", { name: "Mark complete" })).toHaveLength(3);
     expect(screen.getAllByRole("button", { name: "Delete todo" })).toHaveLength(3);
+  });
+
+  // AC-2: Priority badge rendering
+  it("renders a priority badge with the correct label (covers: AC-2)", () => {
+    const todos = [
+      makeTodo({ id: 1, title: "High prio", priority: "HIGH" }),
+    ];
+
+    render(<TodoList todos={todos} />);
+
+    // The badge text "High" also appears in the inline dropdown option;
+    // scope to the badge span by checking the element's tag and class.
+    const badges = screen.getAllByText("High");
+    const badge = badges.find(
+      (el) => el.tagName === "SPAN" && el.className.includes("rounded-full")
+    );
+    expect(badge).toBeInTheDocument();
+  });
+
+  it("renders Medium badge by default (covers: AC-2, AC-5)", () => {
+    const todos = [makeTodo({ id: 1, title: "Default prio" })];
+
+    render(<TodoList todos={todos} />);
+
+    const badges = screen.getAllByText("Medium");
+    const badge = badges.find(
+      (el) => el.tagName === "SPAN" && el.className.includes("rounded-full")
+    );
+    expect(badge).toBeInTheDocument();
+  });
+
+  // AC-1: Due date display (use a future date so it's not overdue)
+  it("renders a due date when present (covers: AC-1)", () => {
+    const future = new Date();
+    future.setFullYear(future.getFullYear() + 1);
+    future.setUTCHours(0, 0, 0, 0);
+
+    const todos = [
+      makeTodo({ id: 1, title: "Dated", dueDate: future }),
+    ];
+
+    render(<TodoList todos={todos} />);
+
+    const dateStr = future.toISOString().slice(0, 10);
+    expect(screen.getByText(dateStr)).toBeInTheDocument();
+  });
+
+  it("does not render a due date when null (covers: AC-5)", () => {
+    const todos = [makeTodo({ id: 1, title: "No date" })];
+
+    render(<TodoList todos={todos} />);
+
+    expect(screen.queryByText(/\d{4}-\d{2}-\d{2}/)).not.toBeInTheDocument();
+  });
+
+  // AC-1: Overdue highlighting
+  it("marks past due dates as overdue (covers: AC-1)", () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setUTCHours(0, 0, 0, 0);
+
+    const todos = [
+      makeTodo({ id: 1, title: "Late", dueDate: yesterday }),
+    ];
+
+    render(<TodoList todos={todos} />);
+
+    expect(screen.getByText(/Overdue:/)).toBeInTheDocument();
+  });
+
+  // AC-4: Inline editing controls
+  it("renders a priority dropdown for each todo (covers: AC-4)", () => {
+    const todos = [makeTodo({ id: 1, title: "Edit me" })];
+
+    render(<TodoList todos={todos} />);
+
+    expect(screen.getByRole("combobox", { name: "Change priority" })).toBeInTheDocument();
+  });
+
+  it("renders a date input for each todo (covers: AC-4)", () => {
+    const todos = [makeTodo({ id: 1, title: "Edit me" })];
+
+    render(<TodoList todos={todos} />);
+
+    // The date input has aria-label "Change due date"
+    const dateInput = screen.getByLabelText("Change due date");
+    expect(dateInput).toBeInTheDocument();
+    expect(dateInput).toHaveAttribute("type", "date");
   });
 });
