@@ -33,14 +33,20 @@ export async function createTodo(formData: FormData) {
   const dueDate = parseDueDate(formData.get("dueDate"));
 
   try {
-    await prisma.todo.create({
-      data: { title: title.trim(), priority, dueDate },
+    await prisma.$transaction(async (tx) => {
+      const maxOrder = await tx.todo.aggregate({
+        _max: { sortOrder: true },
+      });
+      const sortOrder = (maxOrder._max.sortOrder ?? -1) + 1;
+
+      await tx.todo.create({
+        data: { title: title.trim(), priority, dueDate, sortOrder },
+      });
     });
+    revalidatePath("/");
   } catch (error) {
     console.error("Failed to create todo:", error);
   }
-
-  revalidatePath("/");
 }
 
 export async function toggleTodo(formData: FormData) {
@@ -63,11 +69,10 @@ export async function toggleTodo(formData: FormData) {
       where: { id: todo.id },
       data: { completed: !todo.completed },
     });
+    revalidatePath("/");
   } catch (error) {
     console.error("Failed to toggle todo:", error);
   }
-
-  revalidatePath("/");
 }
 
 export async function updateTodo(formData: FormData) {
@@ -103,11 +108,58 @@ export async function updateTodo(formData: FormData) {
       where: { id: parseInt(id, 10) },
       data,
     });
+    revalidatePath("/");
   } catch (error) {
     console.error("Failed to update todo:", error);
   }
+}
 
-  revalidatePath("/");
+export async function reorderTodo(formData: FormData) {
+  const id = formData.get("id");
+  const targetId = formData.get("targetId");
+
+  if (!id || typeof id !== "string") {
+    return;
+  }
+
+  if (!targetId || typeof targetId !== "string") {
+    return;
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const todos = await tx.todo.findMany({
+        orderBy: { sortOrder: "asc" },
+      });
+
+      const draggedIndex = todos.findIndex((t) => t.id === parseInt(id, 10));
+      if (draggedIndex === -1) {
+        return;
+      }
+
+      const dragged = todos.splice(draggedIndex, 1)[0];
+
+      if (targetId === "__first__") {
+        todos.unshift(dragged);
+      } else {
+        const targetIndex = todos.findIndex((t) => t.id === parseInt(targetId, 10));
+        if (targetIndex === -1) {
+          return;
+        }
+        todos.splice(targetIndex + 1, 0, dragged);
+      }
+
+      for (let i = 0; i < todos.length; i++) {
+        await tx.todo.update({
+          where: { id: todos[i].id },
+          data: { sortOrder: i },
+        });
+      }
+    });
+    revalidatePath("/");
+  } catch (error) {
+    console.error("Failed to reorder todo:", error);
+  }
 }
 
 export async function deleteTodo(formData: FormData) {
@@ -121,9 +173,8 @@ export async function deleteTodo(formData: FormData) {
     await prisma.todo.delete({
       where: { id: parseInt(id, 10) },
     });
+    revalidatePath("/");
   } catch (error) {
     console.error("Failed to delete todo:", error);
   }
-
-  revalidatePath("/");
 }

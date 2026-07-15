@@ -12,6 +12,7 @@ Build approach: Skateboard — ship the thinnest usable whole first, then thicke
 | 4 | Todo CRUD | Skateboard | medium | yes | done |
 | 5 | Replace Turso with Neon Postgres | Foundation | medium | yes | done |
 | 6 | Todo enrichments | Skateboard | medium | yes | done |
+| 7 | Drag-and-drop reorder | Skateboard | medium | yes | done |
 
 ## Foundation
 
@@ -120,6 +121,31 @@ Status: done
 - [x] Verify it: `/verify todo-enrichments`
 - [x] Test it: `/test todo-enrichments`
 
+### 7. Drag-and-drop reorder
+
+Intent: let the user reorder todos by dragging them in the list, giving manual control over sequence beyond the existing sort options (priority, due date, newest).
+
+Done when: user can drag any todo to a new position in the list; the order persists across page reloads; reordering works alongside the existing filter bar (filtered view reorder respects the full list order).
+
+Weight: medium
+
+ADR: [005-drag-and-drop-reorder](../adr/005-drag-and-drop-reorder.md)
+
+Code area: `app/generated/prisma/schema.prisma`, `app/actions.ts`, `components/TodoList.tsx`, `components/TodoFilter.tsx`, `app/page.tsx`
+
+Status: done
+
+- [x] Design it (ADR)
+- [x] Build it: `/develop drag-and-drop-reorder`
+  - [x] Schema migration: add sortOrder field + backfill
+  - [x] Server action: reorderTodo with transactional renumbering
+  - [x] Drag-and-drop UI: @dnd-kit grip handle + DndContext + SortableContext
+  - [x] Sort dropdown: Custom option, default sort to custom
+  - [x] Filter coexistence: onDragEnd maps through full list
+  - [x] createTodo sets sortOrder = max + 1
+- [x] Verify it: `/verify drag-and-drop-reorder`
+- [x] Test it: `/test drag-and-drop-reorder`
+
 ## Legend
 
 - **Weight**: lean (skip design-review and harden) · medium (normal path) · full (design-review and harden required)
@@ -130,6 +156,6 @@ Status: done
 **Mode**: add
 
 **Feature enrolled**:
-- 6. Todo enrichments — medium, needs ADR, inherits Skateboard approach. Due dates, priority levels (low/medium/high), and a filter bar (all/active/completed, sort by priority or due date).
+- 7. Drag-and-drop reorder — medium, needs ADR, inherits Skateboard approach. Manual drag-and-drop reordering that persists across reloads and works alongside the existing filter bar.
 
-**Recommended next**: `/blueprint todo-enrichments` to design the data model changes, filter strategy, and priority representation.
+**Recommended next**: `/develop drag-and-drop-reorder` to build the schema migration, server action, drag-and-drop UI, and sort dropdown integration.

@@ -7,6 +7,7 @@ vi.mock("@/app/actions", () => ({
   toggleTodo: vi.fn(),
   deleteTodo: vi.fn(),
   updateTodo: vi.fn(),
+  reorderTodo: vi.fn(),
 }));
 
 function makeTodo(overrides: Partial<{
@@ -15,6 +16,7 @@ function makeTodo(overrides: Partial<{
   completed: boolean;
   priority: "LOW" | "MEDIUM" | "HIGH";
   dueDate: Date | null;
+  sortOrder: number;
   createdAt: Date;
   updatedAt: Date;
 }> = {}) {
@@ -24,6 +26,7 @@ function makeTodo(overrides: Partial<{
     completed: false,
     priority: "MEDIUM" as const,
     dueDate: null as Date | null,
+    sortOrder: 0,
     createdAt: new Date("2025-01-01"),
     updatedAt: new Date("2025-01-01"),
     ...overrides,
@@ -109,5 +112,21 @@ describe("TodoFilter", () => {
     render(<TodoFilter todos={[]} />);
 
     expect(screen.getByText("No todos yet. Add one above.")).toBeInTheDocument();
+  });
+
+  // AC-2: Custom sort is the default and available in the dropdown
+  it("defaults to Custom sort (covers: AC-2)", () => {
+    render(<TodoFilter todos={[]} />);
+
+    const select = screen.getByRole("combobox") as HTMLSelectElement;
+    expect(select.value).toBe("custom");
+  });
+
+  it("includes all four sort options: Priority, Due date, Newest, Custom (covers: AC-2)", () => {
+    render(<TodoFilter todos={[]} />);
+
+    const options = screen.getAllByRole("option");
+    const optionTexts = options.map((o) => (o as HTMLOptionElement).textContent);
+    expect(optionTexts).toEqual(["Priority", "Due date", "Newest", "Custom"]);
   });
 });

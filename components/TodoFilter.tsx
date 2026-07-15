@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { TodoList } from "@/components/TodoList";
+import { reorderTodo } from "@/app/actions";
 import type { Todo } from "@/app/generated/prisma/client";
 
 type FilterStatus = "all" | "active" | "completed";
-type SortKey = "priority" | "dueDate" | "newest";
+type SortKey = "priority" | "dueDate" | "newest" | "custom";
 
 const SORT_LABELS: Record<SortKey, string> = {
   priority: "Priority",
   dueDate: "Due date",
   newest: "Newest",
+  custom: "Custom",
 };
 
 const PRIORITY_ORDER: Record<string, number> = {
@@ -41,9 +43,18 @@ function sortTodos(todos: Todo[], sort: SortKey): Todo[] {
       if (!b.dueDate) return -1;
       return a.dueDate.getTime() - b.dueDate.getTime();
     });
+  } else if (sort === "custom") {
+    copy.sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
   return copy;
+}
+
+function arrayMove<T>(array: T[], from: number, to: number): T[] {
+  const result = [...array];
+  const [item] = result.splice(from, 1);
+  result.splice(to, 0, item);
+  return result;
 }
 
 const STATUSES: { key: FilterStatus; label: string }[] = [
@@ -54,12 +65,52 @@ const STATUSES: { key: FilterStatus; label: string }[] = [
 
 export function TodoFilter({ todos }: { todos: Todo[] }) {
   const [filter, setFilter] = useState<FilterStatus>("all");
-  const [sort, setSort] = useState<SortKey>("newest");
+  const [sort, setSort] = useState<SortKey>("custom");
 
   const filteredSorted = useMemo(() => {
     const filtered = filterTodos(todos, filter);
     return sortTodos(filtered, sort);
   }, [todos, filter, sort]);
+
+  const fullCustomSorted = useMemo(() => {
+    if (sort !== "custom") return null;
+    const copy = [...todos];
+    copy.sort((a, b) => a.sortOrder - b.sortOrder);
+    return copy;
+  }, [todos, sort]);
+
+  const handleReorder = useCallback(
+    (activeId: string, overId: string) => {
+      if (!fullCustomSorted) return;
+
+      const activeIndex = fullCustomSorted.findIndex(
+        (t) => t.id.toString() === activeId
+      );
+      const overIndex = fullCustomSorted.findIndex(
+        (t) => t.id.toString() === overId
+      );
+
+      if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
+        return;
+      }
+
+      const reordered = arrayMove(fullCustomSorted, activeIndex, overIndex);
+      const draggedNewIndex = reordered.findIndex(
+        (t) => t.id.toString() === activeId
+      );
+
+      const targetId =
+        draggedNewIndex === 0
+          ? "__first__"
+          : reordered[draggedNewIndex - 1].id.toString();
+
+      const formData = new FormData();
+      formData.append("id", activeId);
+      formData.append("targetId", targetId);
+      reorderTodo(formData);
+    },
+    [fullCustomSorted]
+  );
 
   return (
     <>
@@ -99,7 +150,11 @@ export function TodoFilter({ todos }: { todos: Todo[] }) {
           </select>
         </div>
       </div>
-      <TodoList todos={filteredSorted} />
+      <TodoList
+        todos={filteredSorted}
+        isCustomSort={sort === "custom"}
+        onReorder={handleReorder}
+      />
     </>
   );
 }

@@ -126,6 +126,7 @@ exports.Prisma.TodoScalarFieldEnum = {
   completed: 'completed',
   priority: 'priority',
   dueDate: 'dueDate',
+  sortOrder: 'sortOrder',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

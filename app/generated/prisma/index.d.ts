@@ -898,10 +898,12 @@ export namespace Prisma {
 
   export type TodoAvgAggregateOutputType = {
     id: number | null
+    sortOrder: number | null
   }
 
   export type TodoSumAggregateOutputType = {
     id: number | null
+    sortOrder: number | null
   }
 
   export type TodoMinAggregateOutputType = {
@@ -910,6 +912,7 @@ export namespace Prisma {
     completed: boolean | null
     priority: $Enums.Priority | null
     dueDate: Date | null
+    sortOrder: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -920,6 +923,7 @@ export namespace Prisma {
     completed: boolean | null
     priority: $Enums.Priority | null
     dueDate: Date | null
+    sortOrder: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -930,6 +934,7 @@ export namespace Prisma {
     completed: number
     priority: number
     dueDate: number
+    sortOrder: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -938,10 +943,12 @@ export namespace Prisma {
 
   export type TodoAvgAggregateInputType = {
     id?: true
+    sortOrder?: true
   }
 
   export type TodoSumAggregateInputType = {
     id?: true
+    sortOrder?: true
   }
 
   export type TodoMinAggregateInputType = {
@@ -950,6 +957,7 @@ export namespace Prisma {
     completed?: true
     priority?: true
     dueDate?: true
+    sortOrder?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -960,6 +968,7 @@ export namespace Prisma {
     completed?: true
     priority?: true
     dueDate?: true
+    sortOrder?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -970,6 +979,7 @@ export namespace Prisma {
     completed?: true
     priority?: true
     dueDate?: true
+    sortOrder?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -1067,6 +1077,7 @@ export namespace Prisma {
     completed: boolean
     priority: $Enums.Priority
     dueDate: Date | null
+    sortOrder: number
     createdAt: Date
     updatedAt: Date
     _count: TodoCountAggregateOutputType | null
@@ -1096,6 +1107,7 @@ export namespace Prisma {
     completed?: boolean
     priority?: boolean
     dueDate?: boolean
+    sortOrder?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["todo"]>
@@ -1106,6 +1118,7 @@ export namespace Prisma {
     completed?: boolean
     priority?: boolean
     dueDate?: boolean
+    sortOrder?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["todo"]>
@@ -1116,6 +1129,7 @@ export namespace Prisma {
     completed?: boolean
     priority?: boolean
     dueDate?: boolean
+    sortOrder?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["todo"]>
@@ -1126,11 +1140,12 @@ export namespace Prisma {
     completed?: boolean
     priority?: boolean
     dueDate?: boolean
+    sortOrder?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type TodoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "completed" | "priority" | "dueDate" | "createdAt" | "updatedAt", ExtArgs["result"]["todo"]>
+  export type TodoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "completed" | "priority" | "dueDate" | "sortOrder" | "createdAt" | "updatedAt", ExtArgs["result"]["todo"]>
 
   export type $TodoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Todo"
@@ -1141,6 +1156,7 @@ export namespace Prisma {
       completed: boolean
       priority: $Enums.Priority
       dueDate: Date | null
+      sortOrder: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["todo"]>
@@ -1571,6 +1587,7 @@ export namespace Prisma {
     readonly completed: FieldRef<"Todo", 'Boolean'>
     readonly priority: FieldRef<"Todo", 'Priority'>
     readonly dueDate: FieldRef<"Todo", 'DateTime'>
+    readonly sortOrder: FieldRef<"Todo", 'Int'>
     readonly createdAt: FieldRef<"Todo", 'DateTime'>
     readonly updatedAt: FieldRef<"Todo", 'DateTime'>
   }
@@ -1964,6 +1981,7 @@ export namespace Prisma {
     completed: 'completed',
     priority: 'priority',
     dueDate: 'dueDate',
+    sortOrder: 'sortOrder',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -2089,6 +2107,7 @@ export namespace Prisma {
     completed?: BoolFilter<"Todo"> | boolean
     priority?: EnumPriorityFilter<"Todo"> | $Enums.Priority
     dueDate?: DateTimeNullableFilter<"Todo"> | Date | string | null
+    sortOrder?: IntFilter<"Todo"> | number
     createdAt?: DateTimeFilter<"Todo"> | Date | string
     updatedAt?: DateTimeFilter<"Todo"> | Date | string
   }
@@ -2099,6 +2118,7 @@ export namespace Prisma {
     completed?: SortOrder
     priority?: SortOrder
     dueDate?: SortOrderInput | SortOrder
+    sortOrder?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -2112,6 +2132,7 @@ export namespace Prisma {
     completed?: BoolFilter<"Todo"> | boolean
     priority?: EnumPriorityFilter<"Todo"> | $Enums.Priority
     dueDate?: DateTimeNullableFilter<"Todo"> | Date | string | null
+    sortOrder?: IntFilter<"Todo"> | number
     createdAt?: DateTimeFilter<"Todo"> | Date | string
     updatedAt?: DateTimeFilter<"Todo"> | Date | string
   }, "id">
@@ -2122,6 +2143,7 @@ export namespace Prisma {
     completed?: SortOrder
     priority?: SortOrder
     dueDate?: SortOrderInput | SortOrder
+    sortOrder?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: TodoCountOrderByAggregateInput
@@ -2140,6 +2162,7 @@ export namespace Prisma {
     completed?: BoolWithAggregatesFilter<"Todo"> | boolean
     priority?: EnumPriorityWithAggregatesFilter<"Todo"> | $Enums.Priority
     dueDate?: DateTimeNullableWithAggregatesFilter<"Todo"> | Date | string | null
+    sortOrder?: IntWithAggregatesFilter<"Todo"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Todo"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Todo"> | Date | string
   }
@@ -2149,6 +2172,7 @@ export namespace Prisma {
     completed?: boolean
     priority?: $Enums.Priority
     dueDate?: Date | string | null
+    sortOrder?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -2159,6 +2183,7 @@ export namespace Prisma {
     completed?: boolean
     priority?: $Enums.Priority
     dueDate?: Date | string | null
+    sortOrder?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -2168,6 +2193,7 @@ export namespace Prisma {
     completed?: BoolFieldUpdateOperationsInput | boolean
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -2178,6 +2204,7 @@ export namespace Prisma {
     completed?: BoolFieldUpdateOperationsInput | boolean
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -2188,6 +2215,7 @@ export namespace Prisma {
     completed?: boolean
     priority?: $Enums.Priority
     dueDate?: Date | string | null
+    sortOrder?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -2197,6 +2225,7 @@ export namespace Prisma {
     completed?: BoolFieldUpdateOperationsInput | boolean
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -2207,6 +2236,7 @@ export namespace Prisma {
     completed?: BoolFieldUpdateOperationsInput | boolean
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -2282,12 +2312,14 @@ export namespace Prisma {
     completed?: SortOrder
     priority?: SortOrder
     dueDate?: SortOrder
+    sortOrder?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type TodoAvgOrderByAggregateInput = {
     id?: SortOrder
+    sortOrder?: SortOrder
   }
 
   export type TodoMaxOrderByAggregateInput = {
@@ -2296,6 +2328,7 @@ export namespace Prisma {
     completed?: SortOrder
     priority?: SortOrder
     dueDate?: SortOrder
+    sortOrder?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -2306,12 +2339,14 @@ export namespace Prisma {
     completed?: SortOrder
     priority?: SortOrder
     dueDate?: SortOrder
+    sortOrder?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type TodoSumOrderByAggregateInput = {
     id?: SortOrder
+    sortOrder?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -2410,16 +2445,16 @@ export namespace Prisma {
     set?: Date | string | null
   }
 
-  export type DateTimeFieldUpdateOperationsInput = {
-    set?: Date | string
-  }
-
   export type IntFieldUpdateOperationsInput = {
     set?: number
     increment?: number
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
