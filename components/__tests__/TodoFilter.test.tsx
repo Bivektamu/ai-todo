@@ -17,6 +17,7 @@ function makeTodo(overrides: Partial<{
   priority: "LOW" | "MEDIUM" | "HIGH";
   dueDate: Date | null;
   sortOrder: number;
+  categoryId: number | null;
   createdAt: Date;
   updatedAt: Date;
 }> = {}) {
@@ -27,6 +28,7 @@ function makeTodo(overrides: Partial<{
     priority: "MEDIUM" as const,
     dueDate: null as Date | null,
     sortOrder: 0,
+    categoryId: null as number | null,
     createdAt: new Date("2025-01-01"),
     updatedAt: new Date("2025-01-01"),
     ...overrides,
@@ -36,7 +38,7 @@ function makeTodo(overrides: Partial<{
 describe("TodoFilter", () => {
   // AC-3: Filter bar renders
   it("renders status filter buttons (covers: AC-3)", () => {
-    render(<TodoFilter todos={[]} />);
+    render(<TodoFilter categories={[]} todos={[]} />);
 
     expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Active" })).toBeInTheDocument();
@@ -44,14 +46,14 @@ describe("TodoFilter", () => {
   });
 
   it("renders sort dropdown (covers: AC-3)", () => {
-    render(<TodoFilter todos={[]} />);
+    render(<TodoFilter categories={[]} todos={[]} />);
 
     expect(screen.getByRole("combobox")).toBeInTheDocument();
     expect(screen.getByText("Sort:")).toBeInTheDocument();
   });
 
   it("All button is selected by default", () => {
-    render(<TodoFilter todos={[]} />);
+    render(<TodoFilter categories={[]} todos={[]} />);
 
     const allBtn = screen.getByRole("button", { name: "All" });
     // The active pill has different styling; check it has the active class
@@ -66,7 +68,7 @@ describe("TodoFilter", () => {
       makeTodo({ id: 2, title: "Done todo", completed: true }),
     ];
 
-    render(<TodoFilter todos={todos} />);
+    render(<TodoFilter categories={[]} todos={todos} />);
 
     // Click Active filter
     await user.click(screen.getByRole("button", { name: "Active" }));
@@ -82,7 +84,7 @@ describe("TodoFilter", () => {
       makeTodo({ id: 2, title: "Done todo", completed: true }),
     ];
 
-    render(<TodoFilter todos={todos} />);
+    render(<TodoFilter categories={[]} todos={todos} />);
 
     await user.click(screen.getByRole("button", { name: "Completed" }));
 
@@ -97,7 +99,7 @@ describe("TodoFilter", () => {
       makeTodo({ id: 2, title: "Done todo", completed: true }),
     ];
 
-    render(<TodoFilter todos={todos} />);
+    render(<TodoFilter categories={[]} todos={todos} />);
 
     // First click Active to filter, then back to All
     await user.click(screen.getByRole("button", { name: "Active" }));
@@ -109,24 +111,24 @@ describe("TodoFilter", () => {
 
   // AC-3: Empty state when list is empty
   it("shows empty state when there are no todos (covers: AC-3, AC-5)", () => {
-    render(<TodoFilter todos={[]} />);
+    render(<TodoFilter categories={[]} todos={[]} />);
 
     expect(screen.getByText("No todos yet. Add one above.")).toBeInTheDocument();
   });
 
   // AC-2: Custom sort is the default and available in the dropdown
   it("defaults to Custom sort (covers: AC-2)", () => {
-    render(<TodoFilter todos={[]} />);
+    render(<TodoFilter categories={[]} todos={[]} />);
 
     const select = screen.getByRole("combobox") as HTMLSelectElement;
     expect(select.value).toBe("custom");
   });
 
-  it("includes all four sort options: Priority, Due date, Newest, Custom (covers: AC-2)", () => {
-    render(<TodoFilter todos={[]} />);
+  it("includes all five sort options: Priority, Due date, Newest, Custom, Category (covers: AC-2)", () => {
+    render(<TodoFilter categories={[]} todos={[]} />);
 
     const options = screen.getAllByRole("option");
     const optionTexts = options.map((o) => (o as HTMLOptionElement).textContent);
-    expect(optionTexts).toEqual(["Priority", "Due date", "Newest", "Custom"]);
+    expect(optionTexts).toEqual(["Priority", "Due date", "Newest", "Custom", "Category"]);
   });
 });

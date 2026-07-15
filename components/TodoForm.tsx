@@ -2,8 +2,9 @@
 
 import { createTodo } from "@/app/actions";
 import { useRef } from "react";
+import type { Category } from "@/app/generated/prisma/client";
 
-export function TodoForm() {
+export function TodoForm({ categories }: { categories: Category[] }) {
   const formRef = useRef<HTMLFormElement>(null);
 
   return (
@@ -40,6 +41,20 @@ export function TodoForm() {
           <option value="MEDIUM">Medium</option>
           <option value="HIGH">High</option>
         </select>
+        {categories.length > 0 && (
+          <select
+            name="categoryId"
+            defaultValue=""
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+          >
+            <option value="">No category</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        )}
         <input
           type="date"
           name="dueDate"

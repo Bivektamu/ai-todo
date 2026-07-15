@@ -3,16 +3,17 @@
 import { useState, useMemo, useCallback } from "react";
 import { TodoList } from "@/components/TodoList";
 import { reorderTodo } from "@/app/actions";
-import type { Todo } from "@/app/generated/prisma/client";
+import type { Todo, Category } from "@/app/generated/prisma/client";
 
 type FilterStatus = "all" | "active" | "completed";
-type SortKey = "priority" | "dueDate" | "newest" | "custom";
+type SortKey = "priority" | "dueDate" | "newest" | "custom" | "category";
 
 const SORT_LABELS: Record<SortKey, string> = {
   priority: "Priority",
   dueDate: "Due date",
   newest: "Newest",
   custom: "Custom",
+  category: "Category",
 };
 
 const PRIORITY_ORDER: Record<string, number> = {
@@ -27,7 +28,8 @@ function filterTodos(todos: Todo[], status: FilterStatus): Todo[] {
   return todos;
 }
 
-function sortTodos(todos: Todo[], sort: SortKey): Todo[] {
+function sortTodos(todos: Todo[], sort: SortKey, categories: Category[]): Todo[] {
+  const categoryMap = new Map(categories.map((c) => [c.id, c]));
   const copy = [...todos];
 
   if (sort === "priority") {
@@ -45,6 +47,16 @@ function sortTodos(todos: Todo[], sort: SortKey): Todo[] {
     });
   } else if (sort === "custom") {
     copy.sort((a, b) => a.sortOrder - b.sortOrder);
+  } else if (sort === "category") {
+    copy.sort((a, b) => {
+      const aName = a.categoryId !== null ? categoryMap.get(a.categoryId)?.name ?? "" : "";
+      const bName = b.categoryId !== null ? categoryMap.get(b.categoryId)?.name ?? "" : "";
+      // Uncategorized at the end
+      if (!aName && !bName) return 0;
+      if (!aName) return 1;
+      if (!bName) return -1;
+      return aName.localeCompare(bName);
+    });
   }
 
   return copy;
@@ -63,14 +75,21 @@ const STATUSES: { key: FilterStatus; label: string }[] = [
   { key: "completed", label: "Completed" },
 ];
 
-export function TodoFilter({ todos }: { todos: Todo[] }) {
+export function TodoFilter({ todos, categories }: { todos: Todo[]; categories: Category[] }) {
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [sort, setSort] = useState<SortKey>("custom");
+  const [activeCategories, setActiveCategories] = useState<Set<number>>(new Set());
 
   const filteredSorted = useMemo(() => {
-    const filtered = filterTodos(todos, filter);
-    return sortTodos(filtered, sort);
-  }, [todos, filter, sort]);
+    let filtered = filterTodos(todos, filter);
+    // Apply category chip filter (union: show todos matching any selected category)
+    if (activeCategories.size > 0) {
+      filtered = filtered.filter(
+        (t) => t.categoryId !== null && activeCategories.has(t.categoryId)
+      );
+    }
+    return sortTodos(filtered, sort, categories);
+  }, [todos, filter, sort, activeCategories, categories]);
 
   const fullCustomSorted = useMemo(() => {
     if (sort !== "custom") return null;
@@ -114,6 +133,40 @@ export function TodoFilter({ todos }: { todos: Todo[] }) {
 
   return (
     <>
+      {/* Category chips */}
+      {categories.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {categories.map((cat) => {
+            const active = activeCategories.has(cat.id);
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => {
+                  setActiveCategories((prev) => {
+                    const next = new Set(prev);
+                    if (active) {
+                      next.delete(cat.id);
+                    } else {
+                      next.add(cat.id);
+                    }
+                    return next;
+                  });
+                }}
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors border ${
+                  active
+                    ? "text-white"
+                    : "text-zinc-600 bg-white hover:text-zinc-900 dark:text-zinc-400 dark:bg-zinc-800 dark:hover:text-zinc-200 border-zinc-300 dark:border-zinc-600"
+                }`}
+                style={active ? { backgroundColor: cat.colour, borderColor: cat.colour } : undefined}
+              >
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800">
           {STATUSES.map((s) => (
@@ -152,6 +205,7 @@ export function TodoFilter({ todos }: { todos: Todo[] }) {
       </div>
       <TodoList
         todos={filteredSorted}
+        categories={categories}
         isCustomSort={sort === "custom"}
         onReorder={handleReorder}
       />

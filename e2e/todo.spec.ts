@@ -4,13 +4,27 @@ test.describe("Todo CRUD", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
 
+    // Open category modal and delete all existing categories
+    const manageBtn = page.getByRole("button", { name: "Manage categories" });
+    if (await manageBtn.isVisible()) {
+      await manageBtn.click();
+      // Delete all categories
+      const deleteCatButtons = page.getByRole("button", { name: /^Delete / });
+      while ((await deleteCatButtons.count()) > 0) {
+        const btn = deleteCatButtons.first();
+        await btn.click();
+        await page.waitForTimeout(300);
+      }
+      // Close modal
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(300);
+    }
+
     // Clean up any existing todos from previous runs
     const deleteButtons = page.getByRole("button", { name: "Delete todo" });
     while ((await deleteButtons.count()) > 0) {
       const btn = deleteButtons.first();
       await btn.click();
-      // Wait for this specific button to disappear (RSC re-render complete)
-      // toBeHidden retries until the element is detached from the DOM
       await expect(btn).toBeHidden({ timeout: 5000 });
     }
   });
@@ -106,5 +120,180 @@ test.describe("Todo CRUD", () => {
     await expect(
       page.getByText("No todos yet. Add one above.")
     ).toBeVisible();
+  });
+});
+
+test.describe("Todo Categories", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+
+    // Clean up todos
+    const deleteButtons = page.getByRole("button", { name: "Delete todo" });
+    while ((await deleteButtons.count()) > 0) {
+      const btn = deleteButtons.first();
+      await btn.click();
+      await expect(btn).toBeHidden({ timeout: 5000 });
+    }
+
+    // Clean up categories
+    const manageBtn = page.getByRole("button", { name: "Manage categories" });
+    if (await manageBtn.isVisible()) {
+      await manageBtn.click();
+      const deleteCatButtons = page.getByRole("button", { name: /^Delete / });
+      while ((await deleteCatButtons.count()) > 0) {
+        const btn = deleteCatButtons.first();
+        await btn.click();
+        await page.waitForTimeout(300);
+      }
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(300);
+    }
+  });
+
+  test("can create, rename, and delete a category (covers: AC-1, AC-5)", async ({ page }) => {
+    // Open modal
+    await page.getByRole("button", { name: "Manage categories" }).click();
+    await expect(page.getByText("Categories")).toBeVisible();
+
+    // Create category
+    await page.getByPlaceholder("New category name").fill("Work");
+    await page.getByRole("button", { name: "Add category" }).click();
+    await expect(page.getByText("Work")).toBeVisible();
+
+    // Rename category
+    await page.getByRole("button", { name: "Rename Work" }).click();
+    const editInput = page.locator('input[name="name"][value="Work"]');
+    await editInput.fill("Office");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText("Office")).toBeVisible();
+    await expect(page.getByText("Work")).not.toBeVisible();
+
+    // Delete category
+    await page.getByRole("button", { name: "Delete Office" }).click();
+    await expect(page.getByText("Office")).not.toBeVisible();
+    await expect(
+      page.getByText("No categories yet. Create one below.")
+    ).toBeVisible();
+
+    // Close modal
+    await page.keyboard.press("Escape");
+  });
+
+  test("can assign a category to a todo at creation (covers: AC-2, AC-3)", async ({ page }) => {
+    // Create a category first
+    await page.getByRole("button", { name: "Manage categories" }).click();
+    await page.getByPlaceholder("New category name").fill("Work");
+    await page.getByRole("button", { name: "Add category" }).click();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+
+    // Create a todo with the category
+    await page.getByPlaceholder("What needs to be done?").fill("Review PR");
+    // Select the category from the dropdown
+    const categorySelect = page.locator('select[name="categoryId"]');
+    await categorySelect.selectOption({ label: "Work" });
+    await page.getByRole("button", { name: "Add" }).click();
+
+    // Verify the todo appears with the category badge
+    await expect(page.getByText("Review PR")).toBeVisible();
+    const listItem = page.getByRole("listitem").filter({ hasText: "Review PR" });
+    await expect(listItem.getByText("Work")).toBeVisible();
+  });
+
+  test("can filter by category chip (covers: AC-4)", async ({ page }) => {
+    // Create two categories
+    await page.getByRole("button", { name: "Manage categories" }).click();
+    await page.getByPlaceholder("New category name").fill("Work");
+    await page.getByRole("button", { name: "Add category" }).click();
+    await page.getByPlaceholder("New category name").fill("Personal");
+    await page.getByRole("button", { name: "Add category" }).click();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+
+    // Create a Work todo
+    await page.getByPlaceholder("What needs to be done?").fill("Work task");
+    const catSelect1 = page.locator('select[name="categoryId"]');
+    await catSelect1.selectOption({ label: "Work" });
+    await page.getByRole("button", { name: "Add" }).click();
+
+    // Create a Personal todo
+    await page.getByPlaceholder("What needs to be done?").fill("Personal task");
+    await catSelect1.selectOption({ label: "Personal" });
+    await page.getByRole("button", { name: "Add" }).click();
+
+    // Both todos visible
+    await expect(page.getByText("Work task")).toBeVisible();
+    await expect(page.getByText("Personal task")).toBeVisible();
+
+    // Click the Work chip
+    await page.getByRole("button", { name: "Work" }).first().click();
+
+    // Only Work task visible
+    await expect(page.getByText("Work task")).toBeVisible();
+    await expect(page.getByText("Personal task")).not.toBeVisible();
+
+    // Click Work chip again to deselect
+    await page.getByRole("button", { name: "Work" }).first().click();
+
+    // Both visible again
+    await expect(page.getByText("Work task")).toBeVisible();
+    await expect(page.getByText("Personal task")).toBeVisible();
+  });
+
+  test("can inline edit a todo's category (covers: AC-2, AC-3)", async ({ page }) => {
+    // Create a category
+    await page.getByRole("button", { name: "Manage categories" }).click();
+    await page.getByPlaceholder("New category name").fill("Work");
+    await page.getByRole("button", { name: "Add category" }).click();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+
+    // Create a todo without a category
+    await page.getByPlaceholder("What needs to be done?").fill("No cat");
+    await page.getByRole("button", { name: "Add" }).click();
+    await expect(page.getByText("No cat")).toBeVisible();
+
+    // Inline edit: change category to Work
+    const listItem = page.getByRole("listitem").filter({ hasText: "No cat" });
+    const inlineSelect = listItem.locator('select[name="categoryId"]');
+    await inlineSelect.selectOption({ label: "Work" });
+
+    // Verify the badge appears
+    await expect(listItem.getByText("Work")).toBeVisible();
+  });
+
+  test("Category appears in sort dropdown (covers: AC-4)", async ({ page }) => {
+    // Create two categories
+    await page.getByRole("button", { name: "Manage categories" }).click();
+    await page.getByPlaceholder("New category name").fill("Zebra");
+    await page.getByRole("button", { name: "Add category" }).click();
+    await page.getByPlaceholder("New category name").fill("Alpha");
+    await page.getByRole("button", { name: "Add category" }).click();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+
+    // Create uncategorized todo
+    await page.getByPlaceholder("What needs to be done?").fill("No category");
+    await page.getByRole("button", { name: "Add" }).click();
+
+    // Create Alpha todo
+    await page.getByPlaceholder("What needs to be done?").fill("Alpha task");
+    const catSelect = page.locator('select[name="categoryId"]');
+    await catSelect.selectOption({ label: "Alpha" });
+    await page.getByRole("button", { name: "Add" }).click();
+
+    // Create Zebra todo
+    await page.getByPlaceholder("What needs to be done?").fill("Zebra task");
+    await catSelect.selectOption({ label: "Zebra" });
+    await page.getByRole("button", { name: "Add" }).click();
+
+    // Select Category sort
+    await page.locator("#todo-sort").selectOption("category");
+
+    // Verify order: Alpha task first, then Zebra task, then No category last
+    const items = page.getByRole("listitem");
+    await expect(items.nth(0)).toContainText("Alpha task");
+    await expect(items.nth(1)).toContainText("Zebra task");
+    await expect(items.nth(2)).toContainText("No category");
   });
 });

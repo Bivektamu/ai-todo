@@ -1,7 +1,7 @@
 "use client";
 
 import { toggleTodo, deleteTodo, updateTodo } from "@/app/actions";
-import type { Todo } from "@/app/generated/prisma/client";
+import type { Todo, Category } from "@/app/generated/prisma/client";
 import {
   DndContext,
   closestCenter,
@@ -55,10 +55,17 @@ function GripHandle() {
   );
 }
 
+function getCategory(categories: Category[], categoryId: number | null): Category | undefined {
+  if (categoryId === null) return undefined;
+  return categories.find((c) => c.id === categoryId);
+}
+
 function SortableTodoRow({
   todo,
+  categories,
 }: {
   todo: Todo;
+  categories: Category[];
 }) {
   const {
     attributes,
@@ -77,6 +84,7 @@ function SortableTodoRow({
 
   const overdue = isOverdue(todo.dueDate);
   const priority = todo.priority ?? "MEDIUM";
+  const category = getCategory(categories, todo.categoryId);
 
   return (
     <li
@@ -139,6 +147,15 @@ function SortableTodoRow({
         {PRIORITY_LABELS[priority]}
       </span>
 
+      {category && (
+        <span
+          className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+          style={{ backgroundColor: category.colour }}
+        >
+          {category.name}
+        </span>
+      )}
+
       {todo.dueDate && (
         <span
           className={`shrink-0 text-xs ${
@@ -165,6 +182,25 @@ function SortableTodoRow({
           <option value="HIGH">High</option>
         </select>
       </form>
+
+      {categories.length > 0 && (
+        <form action={updateTodo} className="contents">
+          <input type="hidden" name="id" value={todo.id} />
+          <select
+            name="categoryId"
+            defaultValue={todo.categoryId?.toString() ?? ""}
+            className="shrink-0 rounded border border-zinc-300 px-1.5 py-0.5 text-xs text-zinc-700 focus:border-zinc-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+            aria-label="Change category"
+          >
+            <option value="">None</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </form>
+      )}
 
       <form action={updateTodo} className="contents">
         <input type="hidden" name="id" value={todo.id} />
@@ -205,11 +241,12 @@ function SortableTodoRow({
 
 interface TodoListProps {
   todos: Todo[];
+  categories: Category[];
   isCustomSort: boolean;
   onReorder: (activeId: string, overId: string) => void;
 }
 
-export function TodoList({ todos, isCustomSort, onReorder }: TodoListProps) {
+export function TodoList({ todos, categories, isCustomSort, onReorder }: TodoListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -233,6 +270,7 @@ export function TodoList({ todos, isCustomSort, onReorder }: TodoListProps) {
         {todos.map((todo) => {
           const overdue = isOverdue(todo.dueDate);
           const priority = todo.priority ?? "MEDIUM";
+          const category = getCategory(categories, todo.categoryId);
 
           return (
             <li
@@ -286,6 +324,15 @@ export function TodoList({ todos, isCustomSort, onReorder }: TodoListProps) {
                 {PRIORITY_LABELS[priority]}
               </span>
 
+              {category && (
+                <span
+                  className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                  style={{ backgroundColor: category.colour }}
+                >
+                  {category.name}
+                </span>
+              )}
+
               {todo.dueDate && (
                 <span
                   className={`shrink-0 text-xs ${
@@ -312,6 +359,25 @@ export function TodoList({ todos, isCustomSort, onReorder }: TodoListProps) {
                   <option value="HIGH">High</option>
                 </select>
               </form>
+
+              {categories.length > 0 && (
+                <form action={updateTodo} className="contents">
+                  <input type="hidden" name="id" value={todo.id} />
+                  <select
+                    name="categoryId"
+                    defaultValue={todo.categoryId?.toString() ?? ""}
+                    className="shrink-0 rounded border border-zinc-300 px-1.5 py-0.5 text-xs text-zinc-700 focus:border-zinc-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                    aria-label="Change category"
+                  >
+                    <option value="">None</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </form>
+              )}
 
               <form action={updateTodo} className="contents">
                 <input type="hidden" name="id" value={todo.id} />
@@ -372,7 +438,7 @@ export function TodoList({ todos, isCustomSort, onReorder }: TodoListProps) {
       >
         <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
           {todos.map((todo) => (
-            <SortableTodoRow key={todo.id} todo={todo} />
+            <SortableTodoRow key={todo.id} todo={todo} categories={categories} />
           ))}
         </ul>
       </SortableContext>

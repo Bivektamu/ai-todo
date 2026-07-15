@@ -1,0 +1,1 @@
+feat: todo categories with Category entity, CRUD, modal, filter chips, and colour picker

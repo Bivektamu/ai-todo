@@ -20,7 +20,7 @@ Use the Prisma singleton from `lib/prisma.ts` for all database access. Server co
 
 ### Server actions
 
-All mutations live in `app/actions.ts` (marked `"use server"`). Each action calls `revalidatePath("/")` after mutating to refresh the page. Four actions: `createTodo`, `toggleTodo`, `updateTodo` (priority and/or dueDate), `deleteTodo`. The `updateTodo` action patches only the fields present in the form submission.
+All mutations live in `app/actions.ts` (marked `"use server"`). Each action calls `revalidatePath("/")` after mutating to refresh the page. Seven actions: `createTodo`, `toggleTodo`, `updateTodo` (priority, dueDate, and/or categoryId), `deleteTodo`, `reorderTodo`, `createCategory`, `renameCategory`, `deleteCategory`. The `updateTodo` action patches only the fields present in the form submission. Category actions validate name uniqueness and colour against a curated palette constant.
 
 ### Client components
 
@@ -38,7 +38,7 @@ When verifying features at runtime:
 
 ### Project docs
 
-- [docs/adr/](docs/adr/) — Architecture Decision Records (001 data model, 002 CRUD, 003 Neon migration, 004 enrichments)
+- [docs/adr/](docs/adr/) — Architecture Decision Records (001 data model, 002 CRUD, 003 Neon migration, 004 enrichments, 005 drag-and-drop reorder, 006 categories)
 - [docs/roadmap/](docs/roadmap/) — Feature roadmap (skateboard build approach)
 
 ### Testing
@@ -49,7 +49,7 @@ Test stack: Vitest (unit/component) + @testing-library/react + @testing-library/
 - **E2E tests**: run with `npx playwright test`. Tests live in `e2e/`. Playwright config (`playwright.config.ts`) starts the Next.js dev server automatically and reuses it if already running.
 - **Server action testing**: mock `next/cache` (revalidatePath) and `@/lib/prisma` using `vi.mock()`. Test each action's input validation (missing, empty, whitespace) and its happy path.
 - **Component testing**: mock server action imports with `vi.mock("@/app/actions")`. Use `screen.getByRole` for accessible queries. When multiple elements share the same role+name, use `getAllByRole` with `.toHaveLength(N)`.
-- **E2E cleanup**: the database persists across test runs. Add a `beforeEach` that deletes all existing todos before each test (use button iteration since there is no direct DB reset hook). When targeting a specific todo's buttons, scope to its `<li>` with `page.getByRole("listitem").filter({ hasText: "..." })` to avoid strict mode violations.
+- **E2E cleanup**: the database persists across test runs. Add a `beforeEach` that deletes all existing todos and categories before each test (use button iteration since there is no direct DB reset hook). For categories, open the "Manage categories" modal, iterate delete buttons, then close with Escape. When targeting a specific todo's buttons, scope to its `<li>` with `page.getByRole("listitem").filter({ hasText: "..." })` to avoid strict mode violations.
 
 ### Known pitfalls
 

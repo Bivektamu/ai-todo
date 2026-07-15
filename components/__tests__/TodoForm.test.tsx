@@ -9,7 +9,7 @@ vi.mock("@/app/actions", () => ({
 
 describe("TodoForm", () => {
   it("renders an input and a submit button", () => {
-    render(<TodoForm />);
+    render(<TodoForm categories={[]} />);
 
     expect(
       screen.getByPlaceholderText("What needs to be done?")
@@ -18,21 +18,21 @@ describe("TodoForm", () => {
   });
 
   it("input has the required attribute", () => {
-    render(<TodoForm />);
+    render(<TodoForm categories={[]} />);
 
     const input = screen.getByPlaceholderText("What needs to be done?");
     expect(input).toBeRequired();
   });
 
   it("input has name 'title'", () => {
-    render(<TodoForm />);
+    render(<TodoForm categories={[]} />);
 
     const input = screen.getByPlaceholderText("What needs to be done?");
     expect(input).toHaveAttribute("name", "title");
   });
 
   it("renders a form element with correct classes", () => {
-    render(<TodoForm />);
+    render(<TodoForm categories={[]} />);
 
     const form = screen.getByRole("textbox").closest("form");
     expect(form).toHaveClass("flex", "flex-col", "gap-3");
@@ -40,7 +40,7 @@ describe("TodoForm", () => {
 
   // AC-2: Priority select in creation form
   it("renders a priority dropdown with three options (covers: AC-2)", () => {
-    render(<TodoForm />);
+    render(<TodoForm categories={[]} />);
 
     const options = screen.getAllByRole("option");
     expect(options).toHaveLength(3);
@@ -50,7 +50,7 @@ describe("TodoForm", () => {
   });
 
   it("priority select defaults to MEDIUM (covers: AC-2)", () => {
-    const { container } = render(<TodoForm />);
+    const { container } = render(<TodoForm categories={[]} />);
 
     const select = container.querySelector('select[name="priority"]') as HTMLSelectElement;
     expect(select).not.toBeNull();
@@ -59,7 +59,7 @@ describe("TodoForm", () => {
 
   // AC-1: Due date input in creation form
   it("renders a date input for due date (covers: AC-1)", () => {
-    const { container } = render(<TodoForm />);
+    const { container } = render(<TodoForm categories={[]} />);
 
     const dateInput = container.querySelector('input[type="date"]') as HTMLInputElement;
     expect(dateInput).not.toBeNull();

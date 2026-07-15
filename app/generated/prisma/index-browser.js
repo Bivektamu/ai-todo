@@ -120,6 +120,14 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.CategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  colour: 'colour',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.TodoScalarFieldEnum = {
   id: 'id',
   title: 'title',
@@ -127,6 +135,7 @@ exports.Prisma.TodoScalarFieldEnum = {
   priority: 'priority',
   dueDate: 'dueDate',
   sortOrder: 'sortOrder',
+  categoryId: 'categoryId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -152,6 +161,7 @@ exports.Priority = exports.$Enums.Priority = {
 };
 
 exports.Prisma.ModelName = {
+  Category: 'Category',
   Todo: 'Todo'
 };
 

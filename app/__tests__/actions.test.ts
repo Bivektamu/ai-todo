@@ -10,6 +10,13 @@ const mockPrisma = {
     delete: vi.fn(),
     aggregate: vi.fn(),
   },
+  category: {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
   $transaction: vi.fn(async (arg: unknown) => {
     if (typeof arg === "function") {
       return arg(mockPrisma);
@@ -44,7 +51,7 @@ describe("createTodo", () => {
     await createTodo(formData);
 
     expect(mockPrisma.todo.create).toHaveBeenCalledWith({
-      data: { title: "Buy groceries", priority: "MEDIUM", dueDate: null, sortOrder: 1 },
+      data: { title: "Buy groceries", priority: "MEDIUM", categoryId: null, dueDate: null, sortOrder: 1 },
     });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/");
   });
@@ -57,7 +64,7 @@ describe("createTodo", () => {
     await createTodo(formData);
 
     expect(mockPrisma.todo.create).toHaveBeenCalledWith({
-      data: { title: "Walk the dog", priority: "MEDIUM", dueDate: null, sortOrder: 1 },
+      data: { title: "Walk the dog", priority: "MEDIUM", categoryId: null, dueDate: null, sortOrder: 1 },
     });
   });
 
@@ -100,6 +107,7 @@ describe("createTodo", () => {
       data: {
         title: "Submit report",
         priority: "MEDIUM",
+        categoryId: null,
         dueDate: new Date("2025-06-15T00:00:00.000Z"),
         sortOrder: 1,
       },
@@ -118,6 +126,7 @@ describe("createTodo", () => {
       data: {
         title: "Urgent fix",
         priority: "HIGH",
+        categoryId: null,
         dueDate: null,
         sortOrder: 1,
       },
@@ -135,6 +144,7 @@ describe("createTodo", () => {
       data: {
         title: "Task",
         priority: "MEDIUM",
+        categoryId: null,
         dueDate: null,
         sortOrder: 1,
       },
@@ -449,5 +459,151 @@ describe("reorderTodo", () => {
     // Transaction wraps the operation; callback returns early when target not found
     expect(mockPrisma.todo.update).not.toHaveBeenCalled();
     expect(mockRevalidatePath).toHaveBeenCalledWith("/");
+  });
+});
+
+describe("createCategory", () => {
+  let createCategory: (formData: FormData) => Promise<void>;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import("@/app/actions");
+    createCategory = mod.createCategory;
+  });
+
+  it("creates a category with a valid name and colour (covers: AC-1)", async () => {
+    const formData = new FormData();
+    formData.set("name", "Work");
+    formData.set("colour", "#3B82F6");
+
+    await createCategory(formData);
+
+    expect(mockPrisma.category.create).toHaveBeenCalledWith({
+      data: { name: "Work", colour: "#3B82F6" },
+    });
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
+  });
+
+  it("trims whitespace from the name", async () => {
+    const formData = new FormData();
+    formData.set("name", "  Work  ");
+    formData.set("colour", "#3B82F6");
+
+    await createCategory(formData);
+
+    expect(mockPrisma.category.create).toHaveBeenCalledWith({
+      data: { name: "Work", colour: "#3B82F6" },
+    });
+  });
+
+  it("does not create a category when name is missing", async () => {
+    const formData = new FormData();
+    formData.set("colour", "#3B82F6");
+
+    await createCategory(formData);
+
+    expect(mockPrisma.category.create).not.toHaveBeenCalled();
+  });
+
+  it("does not create a category when name is empty", async () => {
+    const formData = new FormData();
+    formData.set("name", "");
+    formData.set("colour", "#3B82F6");
+
+    await createCategory(formData);
+
+    expect(mockPrisma.category.create).not.toHaveBeenCalled();
+  });
+
+  it("does not create a category when colour is not in the palette", async () => {
+    const formData = new FormData();
+    formData.set("name", "Work");
+    formData.set("colour", "#000000");
+
+    await createCategory(formData);
+
+    expect(mockPrisma.category.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("renameCategory", () => {
+  let renameCategory: (formData: FormData) => Promise<void>;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import("@/app/actions");
+    renameCategory = mod.renameCategory;
+  });
+
+  it("renames a category by id (covers: AC-1)", async () => {
+    const formData = new FormData();
+    formData.set("id", "1");
+    formData.set("name", "Office");
+
+    await renameCategory(formData);
+
+    expect(mockPrisma.category.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { name: "Office" },
+    });
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
+  });
+
+  it("does nothing when id is missing", async () => {
+    const formData = new FormData();
+    formData.set("name", "Office");
+
+    await renameCategory(formData);
+
+    expect(mockPrisma.category.update).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when name is missing", async () => {
+    const formData = new FormData();
+    formData.set("id", "1");
+
+    await renameCategory(formData);
+
+    expect(mockPrisma.category.update).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when name is empty string", async () => {
+    const formData = new FormData();
+    formData.set("id", "1");
+    formData.set("name", "");
+
+    await renameCategory(formData);
+
+    expect(mockPrisma.category.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteCategory", () => {
+  let deleteCategory: (formData: FormData) => Promise<void>;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const mod = await import("@/app/actions");
+    deleteCategory = mod.deleteCategory;
+  });
+
+  it("deletes a category by id (covers: AC-5)", async () => {
+    const formData = new FormData();
+    formData.set("id", "1");
+
+    await deleteCategory(formData);
+
+    expect(mockPrisma.category.delete).toHaveBeenCalledWith({
+      where: { id: 1 },
+    });
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/");
+  });
+
+  it("does nothing when id is missing", async () => {
+    const formData = new FormData();
+
+    await deleteCategory(formData);
+
+    expect(mockPrisma.category.delete).not.toHaveBeenCalled();
   });
 });

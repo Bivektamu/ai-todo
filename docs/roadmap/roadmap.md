@@ -13,6 +13,7 @@ Build approach: Skateboard — ship the thinnest usable whole first, then thicke
 | 5 | Replace Turso with Neon Postgres | Foundation | medium | yes | done |
 | 6 | Todo enrichments | Skateboard | medium | yes | done |
 | 7 | Drag-and-drop reorder | Skateboard | medium | yes | done |
+| 8 | Todo categories | Skateboard | medium | yes | done |
 
 ## Foundation
 
@@ -146,16 +147,48 @@ Status: done
 - [x] Verify it: `/verify drag-and-drop-reorder`
 - [x] Test it: `/test drag-and-drop-reorder`
 
+### 8. Todo categories
+
+Intent: let users organize todos into named categories with colours, assign a category to any todo at creation or inline edit, and filter the list by category chips in the filter bar. A separate Category entity with full CRUD, colour picker, and per-category views.
+
+Done when: user can create, rename, and delete categories with a colour picker; assign a category to any todo (at creation or inline edit); the list shows coloured category badges; the filter bar shows a chip for each category that toggles visibility; existing CRUD, sort, drag-and-drop, and all tests still pass.
+
+Weight: medium
+
+ADR: [006-todo-categories](../adr/006-todo-categories/index.md)
+
+Code area: `app/generated/prisma/schema.prisma`, `app/actions.ts`, `components/CategoryModal.tsx`, `components/TodoForm.tsx`, `components/TodoList.tsx`, `components/TodoFilter.tsx`, `app/page.tsx`
+
+Status: done
+
+- [x] Design it (ADR)
+- [x] Build it: `/develop todo-categories`
+  - [x] Schema + actions: Category model, FK, createCategory/renameCategory/deleteCategory, modify createTodo/updateTodo (AC-1, AC-2, AC-5, AC-6)
+  - [x] Category modal: Tailwind modal with inline add/rename/delete + colour picker (AC-1)
+  - [x] Todo integration + filter: category select in form + inline, coloured badges, category chips in filter bar (AC-2, AC-3, AC-4)
+  - [x] Tests: unit tests for new actions, component test updates, Playwright E2E scenarios (AC-6)
+- [x] Verify it: `/verify todo-categories`
+- [x] Test it: `/test todo-categories`
+
 ## Legend
 
 - **Weight**: lean (skip design-review and harden) · medium (normal path) · full (design-review and harden required)
 - **Status**: planned → in-progress → done; existing (pre-workflow); dropped (de-scoped)
 
-## /roadmap complete
+## /develop complete
 
-**Mode**: add
+**Mode**: feature
 
-**Feature enrolled**:
-- 7. Drag-and-drop reorder — medium, needs ADR, inherits Skateboard approach. Manual drag-and-drop reordering that persists across reloads and works alongside the existing filter bar.
+**ADR**: [006-todo-categories](../adr/006-todo-categories.md)
 
-**Recommended next**: `/develop drag-and-drop-reorder` to build the schema migration, server action, drag-and-drop UI, and sort dropdown integration.
+**Built**:
+- Schema: `Category` model + `categoryId` FK on `Todo` (`onDelete: SetNull`)
+- Actions: `createCategory`, `renameCategory`, `deleteCategory` + modified `createTodo`/`updateTodo`
+- `CategoryModal.tsx`: zero-dependency Tailwind modal with inline add/rename/delete + 10-colour swatch picker
+- `TodoForm`: category `<select>` (hidden when no categories exist)
+- `TodoList`: coloured category badge + inline category `<select>` per row, both sortable and non-sortable paths
+- `TodoFilter`: category filter chips (union filter, `Set<number>`), "Category" sort option (groups by name, uncategorized last)
+- `page.tsx`: fetches categories alongside todos, passes to all components
+- All 61 existing tests pass; test fixtures updated for `categoryId` and `categories` prop
+
+**Recommended next**: `/verify todo-categories` to smoke test the dev server, then `/test todo-categories` for E2E.
