@@ -4,6 +4,8 @@ import { useState, useMemo, useCallback } from "react";
 import { TodoList } from "@/components/TodoList";
 import { reorderTodo } from "@/app/actions";
 import type { Todo, Category } from "@/app/generated/prisma/client";
+import { Badge } from "@/components/ui/Badge";
+import { Select } from "@/components/ui/Select";
 
 type FilterStatus = "all" | "active" | "completed";
 type SortKey = "priority" | "dueDate" | "newest" | "custom" | "category";
@@ -51,7 +53,6 @@ function sortTodos(todos: Todo[], sort: SortKey, categories: Category[]): Todo[]
     copy.sort((a, b) => {
       const aName = a.categoryId !== null ? categoryMap.get(a.categoryId)?.name ?? "" : "";
       const bName = b.categoryId !== null ? categoryMap.get(b.categoryId)?.name ?? "" : "";
-      // Uncategorized at the end
       if (!aName && !bName) return 0;
       if (!aName) return 1;
       if (!bName) return -1;
@@ -82,7 +83,6 @@ export function TodoFilter({ todos, categories }: { todos: Todo[]; categories: C
 
   const filteredSorted = useMemo(() => {
     let filtered = filterTodos(todos, filter);
-    // Apply category chip filter (union: show todos matching any selected category)
     if (activeCategories.size > 0) {
       filtered = filtered.filter(
         (t) => t.categoryId !== null && activeCategories.has(t.categoryId)
@@ -156,7 +156,7 @@ export function TodoFilter({ todos, categories }: { todos: Todo[]; categories: C
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors border ${
                   active
                     ? "text-white"
-                    : "text-zinc-600 bg-white hover:text-zinc-900 dark:text-zinc-400 dark:bg-zinc-800 dark:hover:text-zinc-200 border-zinc-300 dark:border-zinc-600"
+                    : "text-muted bg-surface hover:text-foreground border-border"
                 }`}
                 style={active ? { backgroundColor: cat.colour, borderColor: cat.colour } : undefined}
               >
@@ -168,7 +168,7 @@ export function TodoFilter({ todos, categories }: { todos: Todo[]; categories: C
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div className="flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800">
+        <div className="flex gap-1 rounded-lg bg-surface p-1">
           {STATUSES.map((s) => (
             <button
               key={s.key}
@@ -176,8 +176,8 @@ export function TodoFilter({ todos, categories }: { todos: Todo[]; categories: C
               onClick={() => setFilter(s.key)}
               className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                 filter === s.key
-                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
-                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted hover:text-foreground"
               }`}
             >
               {s.label}
@@ -186,21 +186,21 @@ export function TodoFilter({ todos, categories }: { todos: Todo[]; categories: C
         </div>
 
         <div className="flex items-center gap-1.5 text-xs">
-          <label htmlFor="todo-sort" className="text-zinc-500 dark:text-zinc-400">
+          <label htmlFor="todo-sort" className="text-muted">
             Sort:
           </label>
-          <select
+          <Select
             id="todo-sort"
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
-            className="rounded border border-zinc-300 px-2 py-1 text-zinc-700 focus:border-zinc-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+            className="px-2 py-1"
           >
             {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
               <option key={k} value={k}>
                 {SORT_LABELS[k]}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
       <TodoList

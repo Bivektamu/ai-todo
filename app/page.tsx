@@ -29,10 +29,10 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex flex-col flex-1 items-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex flex-col flex-1 items-center bg-background font-sans">
       <main className="flex w-full max-w-xl flex-1 flex-col py-16 px-6">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Todo
           </h1>
           <CategoryModal categories={categories} />

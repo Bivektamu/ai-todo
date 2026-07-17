@@ -18,6 +18,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Badge } from "@/components/ui/Badge";
+import { Select } from "@/components/ui/Select";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 const PRIORITY_LABELS: Record<string, string> = {
   LOW: "Low",
@@ -48,9 +52,9 @@ function formatDueDate(date: Date | null): string {
 function GripHandle() {
   return (
     <span className="flex shrink-0 flex-col gap-0.5 py-0.5">
-      <span className="block h-0.5 w-3 rounded-full bg-zinc-300 dark:bg-zinc-600" />
-      <span className="block h-0.5 w-3 rounded-full bg-zinc-300 dark:bg-zinc-600" />
-      <span className="block h-0.5 w-3 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+      <span className="block h-0.5 w-3 rounded-full bg-muted" />
+      <span className="block h-0.5 w-3 rounded-full bg-muted" />
+      <span className="block h-0.5 w-3 rounded-full bg-muted" />
     </span>
   );
 }
@@ -96,7 +100,7 @@ function SortableTodoRow({
         {...attributes}
         {...listeners}
         type="button"
-        className="shrink-0 cursor-grab touch-none rounded p-0.5 text-zinc-400 hover:text-zinc-600 active:cursor-grabbing dark:text-zinc-500 dark:hover:text-zinc-300"
+        className="shrink-0 cursor-grab touch-none rounded p-0.5 text-muted hover:text-foreground active:cursor-grabbing"
         aria-label="Drag to reorder"
       >
         <GripHandle />
@@ -106,16 +110,16 @@ function SortableTodoRow({
         <input type="hidden" name="id" value={todo.id} />
         <button
           type="submit"
-          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
+          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
             todo.completed
-              ? "border-zinc-900 bg-zinc-900 dark:border-zinc-100 dark:bg-zinc-100"
-              : "border-zinc-300 dark:border-zinc-600"
+              ? "bg-primary border-primary"
+              : "border-border bg-surface"
           }`}
           aria-label={todo.completed ? "Mark incomplete" : "Mark complete"}
         >
           {todo.completed && (
             <svg
-              className="h-3 w-3 text-white dark:text-zinc-900"
+              className="h-3 w-3 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -134,34 +138,29 @@ function SortableTodoRow({
       <span
         className={`flex-1 text-sm ${
           todo.completed
-            ? "text-zinc-400 line-through dark:text-zinc-500"
-            : "text-zinc-900 dark:text-zinc-100"
+            ? "text-muted line-through"
+            : "text-foreground"
         }`}
       >
         {todo.title}
       </span>
 
-      <span
-        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${PRIORITY_COLORS[priority]}`}
-      >
+      <Badge className={PRIORITY_COLORS[priority]}>
         {PRIORITY_LABELS[priority]}
-      </span>
+      </Badge>
 
       {category && (
-        <span
-          className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-white"
-          style={{ backgroundColor: category.colour }}
-        >
+        <Badge color={category.colour} className="text-white">
           {category.name}
-        </span>
+        </Badge>
       )}
 
       {todo.dueDate && (
         <span
           className={`shrink-0 text-xs ${
             overdue
-              ? "font-semibold text-red-600 dark:text-red-400"
-              : "text-zinc-500 dark:text-zinc-400"
+              ? "font-semibold text-danger"
+              : "text-muted"
           }`}
         >
           {overdue ? "Overdue: " : ""}
@@ -171,25 +170,25 @@ function SortableTodoRow({
 
       <form action={updateTodo} className="contents">
         <input type="hidden" name="id" value={todo.id} />
-        <select
+        <Select
           name="priority"
           defaultValue={priority}
-          className="shrink-0 rounded border border-zinc-300 px-1.5 py-0.5 text-xs text-zinc-700 focus:border-zinc-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+          className="px-1.5 py-0.5 text-xs"
           aria-label="Change priority"
         >
           <option value="LOW">Low</option>
           <option value="MEDIUM">Medium</option>
           <option value="HIGH">High</option>
-        </select>
+        </Select>
       </form>
 
       {categories.length > 0 && (
         <form action={updateTodo} className="contents">
           <input type="hidden" name="id" value={todo.id} />
-          <select
+          <Select
             name="categoryId"
             defaultValue={todo.categoryId?.toString() ?? ""}
-            className="shrink-0 rounded border border-zinc-300 px-1.5 py-0.5 text-xs text-zinc-700 focus:border-zinc-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+            className="px-1.5 py-0.5 text-xs"
             aria-label="Change category"
           >
             <option value="">None</option>
@@ -198,26 +197,28 @@ function SortableTodoRow({
                 {cat.name}
               </option>
             ))}
-          </select>
+          </Select>
         </form>
       )}
 
       <form action={updateTodo} className="contents">
         <input type="hidden" name="id" value={todo.id} />
-        <input
+        <Input
           type="date"
           name="dueDate"
           defaultValue={formatDueDate(todo.dueDate)}
-          className="shrink-0 rounded border border-zinc-300 px-1.5 py-0.5 text-xs text-zinc-700 focus:border-zinc-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+          className="px-1.5 py-0.5 text-xs"
           aria-label="Change due date"
         />
       </form>
 
       <form action={deleteTodo} className="contents">
         <input type="hidden" name="id" value={todo.id} />
-        <button
+        <Button
           type="submit"
-          className="text-sm text-zinc-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-400"
+          variant="ghost"
+          size="sm"
+          className="text-muted hover:text-danger"
           aria-label="Delete todo"
         >
           <svg
@@ -233,7 +234,7 @@ function SortableTodoRow({
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-        </button>
+        </Button>
       </form>
     </li>
   );
@@ -258,7 +259,7 @@ export function TodoList({ todos, categories, isCustomSort, onReorder }: TodoLis
 
   if (todos.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="py-8 text-center text-sm text-muted">
         No todos yet. Add one above.
       </p>
     );
@@ -266,7 +267,7 @@ export function TodoList({ todos, categories, isCustomSort, onReorder }: TodoLis
 
   if (!isCustomSort) {
     return (
-      <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+      <ul className="divide-y divide-border">
         {todos.map((todo) => {
           const overdue = isOverdue(todo.dueDate);
           const priority = todo.priority ?? "MEDIUM";
@@ -281,10 +282,10 @@ export function TodoList({ todos, categories, isCustomSort, onReorder }: TodoLis
                 <input type="hidden" name="id" value={todo.id} />
                 <button
                   type="submit"
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                     todo.completed
-                      ? "border-zinc-900 bg-zinc-900 dark:border-zinc-100 dark:bg-zinc-100"
-                      : "border-zinc-300 dark:border-zinc-600"
+                      ? "bg-primary border-primary"
+                      : "border-border bg-surface"
                   }`}
                   aria-label={
                     todo.completed ? "Mark incomplete" : "Mark complete"
@@ -292,7 +293,7 @@ export function TodoList({ todos, categories, isCustomSort, onReorder }: TodoLis
                 >
                   {todo.completed && (
                     <svg
-                      className="h-3 w-3 text-white dark:text-zinc-900"
+                      className="h-3 w-3 text-white"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -311,34 +312,29 @@ export function TodoList({ todos, categories, isCustomSort, onReorder }: TodoLis
               <span
                 className={`flex-1 text-sm ${
                   todo.completed
-                    ? "text-zinc-400 line-through dark:text-zinc-500"
-                    : "text-zinc-900 dark:text-zinc-100"
+                    ? "text-muted line-through"
+                    : "text-foreground"
                 }`}
               >
                 {todo.title}
               </span>
 
-              <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${PRIORITY_COLORS[priority]}`}
-              >
+              <Badge className={PRIORITY_COLORS[priority]}>
                 {PRIORITY_LABELS[priority]}
-              </span>
+              </Badge>
 
               {category && (
-                <span
-                  className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                  style={{ backgroundColor: category.colour }}
-                >
+                <Badge color={category.colour} className="text-white">
                   {category.name}
-                </span>
+                </Badge>
               )}
 
               {todo.dueDate && (
                 <span
                   className={`shrink-0 text-xs ${
                     overdue
-                      ? "font-semibold text-red-600 dark:text-red-400"
-                      : "text-zinc-500 dark:text-zinc-400"
+                      ? "font-semibold text-danger"
+                      : "text-muted"
                   }`}
                 >
                   {overdue ? "Overdue: " : ""}
@@ -348,25 +344,25 @@ export function TodoList({ todos, categories, isCustomSort, onReorder }: TodoLis
 
               <form action={updateTodo} className="contents">
                 <input type="hidden" name="id" value={todo.id} />
-                <select
+                <Select
                   name="priority"
                   defaultValue={priority}
-                  className="shrink-0 rounded border border-zinc-300 px-1.5 py-0.5 text-xs text-zinc-700 focus:border-zinc-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                  className="px-1.5 py-0.5 text-xs"
                   aria-label="Change priority"
                 >
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="HIGH">High</option>
-                </select>
+                </Select>
               </form>
 
               {categories.length > 0 && (
                 <form action={updateTodo} className="contents">
                   <input type="hidden" name="id" value={todo.id} />
-                  <select
+                  <Select
                     name="categoryId"
                     defaultValue={todo.categoryId?.toString() ?? ""}
-                    className="shrink-0 rounded border border-zinc-300 px-1.5 py-0.5 text-xs text-zinc-700 focus:border-zinc-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                    className="px-1.5 py-0.5 text-xs"
                     aria-label="Change category"
                   >
                     <option value="">None</option>
@@ -375,26 +371,28 @@ export function TodoList({ todos, categories, isCustomSort, onReorder }: TodoLis
                         {cat.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </form>
               )}
 
               <form action={updateTodo} className="contents">
                 <input type="hidden" name="id" value={todo.id} />
-                <input
+                <Input
                   type="date"
                   name="dueDate"
                   defaultValue={formatDueDate(todo.dueDate)}
-                  className="shrink-0 rounded border border-zinc-300 px-1.5 py-0.5 text-xs text-zinc-700 focus:border-zinc-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                  className="px-1.5 py-0.5 text-xs"
                   aria-label="Change due date"
                 />
               </form>
 
               <form action={deleteTodo} className="contents">
                 <input type="hidden" name="id" value={todo.id} />
-                <button
+                <Button
                   type="submit"
-                  className="text-sm text-zinc-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-400"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted hover:text-danger"
                   aria-label="Delete todo"
                 >
                   <svg
@@ -410,7 +408,7 @@ export function TodoList({ todos, categories, isCustomSort, onReorder }: TodoLis
                       d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
-                </button>
+                </Button>
               </form>
             </li>
           );
@@ -436,7 +434,7 @@ export function TodoList({ todos, categories, isCustomSort, onReorder }: TodoLis
         items={todos.map((t) => t.id.toString())}
         strategy={verticalListSortingStrategy}
       >
-        <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+        <ul className="divide-y divide-border">
           {todos.map((todo) => (
             <SortableTodoRow key={todo.id} todo={todo} categories={categories} />
           ))}

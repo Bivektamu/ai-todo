@@ -3,6 +3,9 @@
 import { createTodo } from "@/app/actions";
 import { useRef } from "react";
 import type { Category } from "@/app/generated/prisma/client";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 
 export function TodoForm({ categories }: { categories: Category[] }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -17,49 +20,34 @@ export function TodoForm({ categories }: { categories: Category[] }) {
       className="flex flex-col gap-3"
     >
       <div className="flex gap-2">
-        <input
+        <Input
           type="text"
           name="title"
           placeholder="What needs to be done?"
           required
-          className="flex-1 rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+          className="flex-1"
         />
-        <button
-          type="submit"
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-        >
+        <Button type="submit" variant="primary">
           Add
-        </button>
+        </Button>
       </div>
       <div className="flex gap-2">
-        <select
-          name="priority"
-          defaultValue="MEDIUM"
-          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-        >
+        <Select name="priority" defaultValue="MEDIUM">
           <option value="LOW">Low</option>
           <option value="MEDIUM">Medium</option>
           <option value="HIGH">High</option>
-        </select>
+        </Select>
         {categories.length > 0 && (
-          <select
-            name="categoryId"
-            defaultValue=""
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-          >
+          <Select name="categoryId" defaultValue="">
             <option value="">No category</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
             ))}
-          </select>
+          </Select>
         )}
-        <input
-          type="date"
-          name="dueDate"
-          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-        />
+        <Input type="date" name="dueDate" />
       </div>
     </form>
   );

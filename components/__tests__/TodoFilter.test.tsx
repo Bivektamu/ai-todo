@@ -57,7 +57,7 @@ describe("TodoFilter", () => {
 
     const allBtn = screen.getByRole("button", { name: "All" });
     // The active pill has different styling; check it has the active class
-    expect(allBtn.className).toContain("bg-white");
+    expect(allBtn.className).toContain("bg-background");
   });
 
   // AC-3: Filtering

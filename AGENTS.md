@@ -26,6 +26,16 @@ All mutations live in `app/actions.ts` (marked `"use server"`). Each action call
 
 Client components use `"use client"` and keep state minimal. Forms use the `action` prop with server actions for mutations (no client-side fetch for CRUD).
 
+### Design system
+
+See [components/ui/AGENTS.md](components/ui/AGENTS.md) for the full primer. In short:
+
+- Six reusable primitives live in `components/ui/`: **Button**, **Input**, **Badge**, **Select**, **Modal**, **Checkbox**.
+- Design tokens (background, surface, foreground, muted, border, primary, danger, success) are defined in `app/globals.css` via Tailwind CSS 4's `@theme` directive with light and dark overrides (`prefers-color-scheme`).
+- Every primitive supports `className` overrides, spreads standard HTML attributes, and has `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`.
+- A component catalogue is viewable at `/ui` (`app/ui/page.tsx`).
+- Use the primitives instead of ad hoc Tailwind classes for buttons, inputs, badges, selects, modals, and checkboxes.
+
 ### Verification
 
 When verifying features at runtime:
@@ -38,7 +48,7 @@ When verifying features at runtime:
 
 ### Project docs
 
-- [docs/adr/](docs/adr/) — Architecture Decision Records (001 data model, 002 CRUD, 003 Neon migration, 004 enrichments, 005 drag-and-drop reorder, 006 categories)
+- [docs/adr/](docs/adr/) — Architecture Decision Records (001 data model, 002 CRUD, 003 Neon migration, 004 enrichments, 005 drag-and-drop reorder, 006 categories, 007 design system)
 - [docs/roadmap/](docs/roadmap/) — Feature roadmap (skateboard build approach)
 
 ### Testing

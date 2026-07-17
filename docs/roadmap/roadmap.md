@@ -14,6 +14,7 @@ Build approach: Skateboard — ship the thinnest usable whole first, then thicke
 | 6 | Todo enrichments | Skateboard | medium | yes | done |
 | 7 | Drag-and-drop reorder | Skateboard | medium | yes | done |
 | 8 | Todo categories | Skateboard | medium | yes | done |
+| 9 | Design system | Polish | full | yes | done |
 
 ## Foundation
 
@@ -177,18 +178,47 @@ Status: done
 
 ## /develop complete
 
-**Mode**: feature
+**Mode**: feature · Facade approach
 
-**ADR**: [006-todo-categories](../adr/006-todo-categories.md)
+**ADR**: [007-design-system](../adr/007-design-system.md)
 
 **Built**:
-- Schema: `Category` model + `categoryId` FK on `Todo` (`onDelete: SetNull`)
-- Actions: `createCategory`, `renameCategory`, `deleteCategory` + modified `createTodo`/`updateTodo`
-- `CategoryModal.tsx`: zero-dependency Tailwind modal with inline add/rename/delete + 10-colour swatch picker
-- `TodoForm`: category `<select>` (hidden when no categories exist)
-- `TodoList`: coloured category badge + inline category `<select>` per row, both sortable and non-sortable paths
-- `TodoFilter`: category filter chips (union filter, `Set<number>`), "Category" sort option (groups by name, uncategorized last)
-- `page.tsx`: fetches categories alongside todos, passes to all components
-- All 61 existing tests pass; test fixtures updated for `categoryId` and `categories` prop
+- Design tokens: `@theme` block in `app/globals.css` with 7 colour tokens (background, surface, foreground, muted, border, primary, danger, success) plus light/dark overrides via `prefers-color-scheme`
+- `components/ui/Button.tsx`: 5 variants (primary, secondary, danger, ghost, icon), 2 sizes (sm, md), focus rings, disabled state
+- `components/ui/Input.tsx`: text and date, forwarded ref, focus rings
+- `components/ui/Badge.tsx`: coloured pill with `color` prop
+- `components/ui/Select.tsx`: custom chevron, focus rings
+- `components/ui/Checkbox.tsx`: custom styled checkbox with checkmark SVG
+- `components/ui/Modal.tsx`: overlay + panel, Escape/click to close, focus management
+- `components/ui/CatalogueSection.tsx`: catalogue layout wrapper
+- `app/ui/page.tsx`: component catalogue at `/ui` rendering every primitive with all variants
+- Integration: `TodoForm.tsx`, `TodoList.tsx`, `TodoFilter.tsx`, `CategoryModal.tsx`, `app/page.tsx` all use design tokens and UI primitives instead of ad hoc Tailwind classes
+- Unit tests: 6 test files with 37 tests for all primitives (Badge, Button, Checkbox, Input, Modal, Select)
+- All 117 tests pass (12 test files, 0 failures)
 
-**Recommended next**: `/verify todo-categories` to smoke test the dev server, then `/test todo-categories` for E2E.
+**Recommended next**: `/verify design-system` to smoke test the dev server at `/` and `/ui`, then `/test design-system` for E2E.
+
+## Polish
+
+### 9. Design system &middot; Facade
+
+Intent: establish a centralized design system with design tokens (colours, spacing, typography) and a set of reusable base UI components (Button, Input, Badge, Modal, Select), replacing ad hoc duplication across the existing todo UI with consistent primitives. Facade approach: build the visual component library and token definitions first as a standalone layer, then integrate into the app.
+
+Done when: a `components/ui/` directory holds reusable primitives; design tokens are defined in one place (Tailwind theme or CSS custom properties); a component catalogue or story is viewable; existing pages use the new components and tokens; all existing tests still pass.
+
+Weight: full
+
+ADR: [007-design-system](../adr/007-design-system/index.md)
+
+Code area: `components/ui/`, `app/globals.css`, `tailwind.config.ts`, `components/TodoForm.tsx`, `components/TodoList.tsx`, `components/TodoFilter.tsx`, `components/CategoryModal.tsx`, `app/page.tsx`
+
+Status: done
+
+- [x] Design it (ADR)
+- [x] Build it: `/develop design-system`
+  - [x] Design tokens + Button, Input primitives (AC-1, AC-2, AC-3)
+  - [x] Badge, Select, Checkbox, Modal primitives (AC-1, AC-3)
+  - [x] Catalogue page + integration into existing pages (AC-4, AC-6)
+  - [x] Tests and verification (AC-1, AC-3, AC-5, AC-6)
+- [x] Verify it: `/verify design-system`
+- [x] Test it: `/test design-system`
