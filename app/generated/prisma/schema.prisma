@@ -16,13 +16,51 @@ enum Priority {
   HIGH
 }
 
+model User {
+  id            Int        @id @default(autoincrement())
+  name          String?
+  email         String?    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  accounts      Account[]
+  todos         Todo[]
+  categories    Category[]
+}
+
+model Account {
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
 model Category {
   id        Int      @id @default(autoincrement())
-  name      String   @unique
+  name      String
   colour    String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   todos     Todo[]
+
+  @@unique([userId, name])
+  @@index([userId])
 }
 
 model Todo {
@@ -33,7 +71,11 @@ model Todo {
   dueDate    DateTime?
   sortOrder  Int       @default(0)
   categoryId Int?
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+
+  @@index([userId])
 }

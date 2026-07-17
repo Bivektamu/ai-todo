@@ -13,6 +13,7 @@ function makeCategory(overrides: Partial<{
   id: number;
   name: string;
   colour: string;
+  userId: number;
   createdAt: Date;
   updatedAt: Date;
 }> = {}) {
@@ -20,6 +21,7 @@ function makeCategory(overrides: Partial<{
     id: 1,
     name: "Work",
     colour: "#3B82F6",
+    userId: 1,
     createdAt: new Date("2025-01-01"),
     updatedAt: new Date("2025-01-01"),
     ...overrides,

@@ -1,19 +1,26 @@
 import { prisma } from "./lib/prisma";
 
 async function verify() {
+  // Create a test user
+  const user = await prisma.user.upsert({
+    where: { email: "verify-reorder@test.com" },
+    update: {},
+    create: { email: "verify-reorder@test.com" },
+  });
+
   // Clean up existing todos and seed test data
-  await prisma.todo.deleteMany();
+  await prisma.todo.deleteMany({ where: { userId: user.id } });
 
   await prisma.todo.createMany({
     data: [
-      { title: "First todo", sortOrder: 0 },
-      { title: "Second todo", sortOrder: 1 },
-      { title: "Third todo", sortOrder: 2 },
+      { title: "First todo", sortOrder: 0, userId: user.id },
+      { title: "Second todo", sortOrder: 1, userId: user.id },
+      { title: "Third todo", sortOrder: 2, userId: user.id },
     ],
   });
 
   // Verify initial order
-  const initial = await prisma.todo.findMany({ orderBy: { sortOrder: "asc" } });
+  const initial = await prisma.todo.findMany({ where: { userId: user.id }, orderBy: { sortOrder: "asc" } });
   console.log("Initial order:", initial.map((t) => t.title).join(" → "));
   console.assert(
     initial.map((t) => t.title).join(",") === "First todo,Second todo,Third todo",
@@ -32,11 +39,11 @@ async function verify() {
 
   await prisma.$transaction(
     todos.map((t, i) =>
-      prisma.todo.update({ where: { id: t.id }, data: { sortOrder: i } })
+      prisma.todo.update({ where: { id: t.id, userId: user.id }, data: { sortOrder: i } })
     )
   );
 
-  const reordered = await prisma.todo.findMany({ orderBy: { sortOrder: "asc" } });
+  const reordered = await prisma.todo.findMany({ where: { userId: user.id }, orderBy: { sortOrder: "asc" } });
   console.log("After reorder:", reordered.map((t) => t.title).join(" → "));
   console.assert(
     reordered.map((t) => t.title).join(",") === "Second todo,Third todo,First todo",
@@ -52,21 +59,21 @@ async function verify() {
 
   await prisma.$transaction(
     todos2.map((t, i) =>
-      prisma.todo.update({ where: { id: t.id }, data: { sortOrder: i } })
+      prisma.todo.update({ where: { id: t.id, userId: user.id }, data: { sortOrder: i } })
     )
   );
 
-  const reordered2 = await prisma.todo.findMany({ orderBy: { sortOrder: "asc" } });
+  const reordered2 = await prisma.todo.findMany({ where: { userId: user.id }, orderBy: { sortOrder: "asc" } });
   console.log("After move to first:", reordered2.map((t) => t.title).join(" → "));
 
   // Verify createTodo sets sortOrder = max + 1
-  const maxBefore = await prisma.todo.aggregate({ _max: { sortOrder: true } });
+  const maxBefore = await prisma.todo.aggregate({ where: { userId: user.id }, _max: { sortOrder: true } });
   const nextOrder = (maxBefore._max.sortOrder ?? -1) + 1;
   await prisma.todo.create({
-    data: { title: "New todo", sortOrder: nextOrder },
+    data: { title: "New todo", sortOrder: nextOrder, userId: user.id },
   });
 
-  const afterCreate = await prisma.todo.findMany({ orderBy: { sortOrder: "asc" } });
+  const afterCreate = await prisma.todo.findMany({ where: { userId: user.id }, orderBy: { sortOrder: "asc" } });
   console.log("After create:", afterCreate.map((t) => t.title).join(" → "));
   console.assert(
     afterCreate[afterCreate.length - 1].title === "New todo",
@@ -78,7 +85,7 @@ async function verify() {
   );
 
   // Cleanup
-  await prisma.todo.deleteMany();
+  await prisma.todo.deleteMany({ where: { userId: user.id } });
   await prisma.$disconnect();
 
   console.log("\n✅ All reorder verifications passed!");

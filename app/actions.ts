@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH"] as const;
 
@@ -33,6 +34,12 @@ function parseCategoryId(value: FormDataEntryValue | null): number | null {
 }
 
 export async function createTodo(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return;
+  }
+  const userId = parseInt(session.user.id, 10);
+
   const title = formData.get("title");
 
   if (!title || typeof title !== "string" || title.trim().length === 0) {
@@ -43,15 +50,26 @@ export async function createTodo(formData: FormData) {
   const dueDate = parseDueDate(formData.get("dueDate"));
   const categoryId = parseCategoryId(formData.get("categoryId"));
 
+  // Verify category belongs to user if provided
+  if (categoryId !== null) {
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId, userId },
+    });
+    if (!category) {
+      return;
+    }
+  }
+
   try {
     await prisma.$transaction(async (tx) => {
       const maxOrder = await tx.todo.aggregate({
         _max: { sortOrder: true },
+        where: { userId },
       });
       const sortOrder = (maxOrder._max.sortOrder ?? -1) + 1;
 
       await tx.todo.create({
-        data: { title: title.trim(), priority, dueDate, sortOrder, categoryId },
+        data: { title: title.trim(), priority, dueDate, sortOrder, categoryId, userId },
       });
     });
     revalidatePath("/");
@@ -61,6 +79,12 @@ export async function createTodo(formData: FormData) {
 }
 
 export async function toggleTodo(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return;
+  }
+  const userId = parseInt(session.user.id, 10);
+
   const id = formData.get("id");
 
   if (!id || typeof id !== "string") {
@@ -69,7 +93,7 @@ export async function toggleTodo(formData: FormData) {
 
   try {
     const todo = await prisma.todo.findUnique({
-      where: { id: parseInt(id, 10) },
+      where: { id: parseInt(id, 10), userId },
     });
 
     if (!todo) {
@@ -77,7 +101,7 @@ export async function toggleTodo(formData: FormData) {
     }
 
     await prisma.todo.update({
-      where: { id: todo.id },
+      where: { id: todo.id, userId },
       data: { completed: !todo.completed },
     });
     revalidatePath("/");
@@ -87,6 +111,12 @@ export async function toggleTodo(formData: FormData) {
 }
 
 export async function updateTodo(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return;
+  }
+  const userId = parseInt(session.user.id, 10);
+
   const id = formData.get("id");
 
   if (!id || typeof id !== "string") {
@@ -117,11 +147,23 @@ export async function updateTodo(formData: FormData) {
     }
 
     if (hasCategoryId) {
-      data.categoryId = parseCategoryId(categoryIdRaw);
+      const catId = parseCategoryId(categoryIdRaw);
+      // Verify category belongs to user
+      if (catId !== null) {
+        const category = await prisma.category.findUnique({
+          where: { id: catId, userId },
+        });
+        if (!category) {
+          return;
+        }
+        data.categoryId = catId;
+      } else {
+        data.categoryId = null;
+      }
     }
 
     await prisma.todo.update({
-      where: { id: parseInt(id, 10) },
+      where: { id: parseInt(id, 10), userId },
       data,
     });
     revalidatePath("/");
@@ -131,6 +173,12 @@ export async function updateTodo(formData: FormData) {
 }
 
 export async function reorderTodo(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return;
+  }
+  const userId = parseInt(session.user.id, 10);
+
   const id = formData.get("id");
   const targetId = formData.get("targetId");
 
@@ -145,6 +193,7 @@ export async function reorderTodo(formData: FormData) {
   try {
     await prisma.$transaction(async (tx) => {
       const todos = await tx.todo.findMany({
+        where: { userId },
         orderBy: { sortOrder: "asc" },
       });
 
@@ -167,7 +216,7 @@ export async function reorderTodo(formData: FormData) {
 
       for (let i = 0; i < todos.length; i++) {
         await tx.todo.update({
-          where: { id: todos[i].id },
+          where: { id: todos[i].id, userId },
           data: { sortOrder: i },
         });
       }
@@ -179,6 +228,12 @@ export async function reorderTodo(formData: FormData) {
 }
 
 export async function createCategory(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return;
+  }
+  const userId = parseInt(session.user.id, 10);
+
   const name = formData.get("name");
   const colour = formData.get("colour");
 
@@ -197,7 +252,7 @@ export async function createCategory(formData: FormData) {
 
   try {
     await prisma.category.create({
-      data: { name: name.trim(), colour },
+      data: { name: name.trim(), colour, userId },
     });
     revalidatePath("/");
   } catch (error) {
@@ -207,6 +262,12 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function renameCategory(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return;
+  }
+  const userId = parseInt(session.user.id, 10);
+
   const id = formData.get("id");
   const name = formData.get("name");
 
@@ -220,7 +281,7 @@ export async function renameCategory(formData: FormData) {
 
   try {
     await prisma.category.update({
-      where: { id: parseInt(id, 10) },
+      where: { id: parseInt(id, 10), userId },
       data: { name: name.trim() },
     });
     revalidatePath("/");
@@ -231,6 +292,12 @@ export async function renameCategory(formData: FormData) {
 }
 
 export async function deleteCategory(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return;
+  }
+  const userId = parseInt(session.user.id, 10);
+
   const id = formData.get("id");
 
   if (!id || typeof id !== "string") {
@@ -239,7 +306,7 @@ export async function deleteCategory(formData: FormData) {
 
   try {
     await prisma.category.delete({
-      where: { id: parseInt(id, 10) },
+      where: { id: parseInt(id, 10), userId },
     });
     revalidatePath("/");
   } catch (error) {
@@ -249,6 +316,12 @@ export async function deleteCategory(formData: FormData) {
 }
 
 export async function deleteTodo(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return;
+  }
+  const userId = parseInt(session.user.id, 10);
+
   const id = formData.get("id");
 
   if (!id || typeof id !== "string") {
@@ -257,7 +330,7 @@ export async function deleteTodo(formData: FormData) {
 
   try {
     await prisma.todo.delete({
-      where: { id: parseInt(id, 10) },
+      where: { id: parseInt(id, 10), userId },
     });
     revalidatePath("/");
   } catch (error) {

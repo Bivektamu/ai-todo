@@ -1,8 +1,20 @@
 import { test, expect } from "@playwright/test";
 
+const TEST_EMAIL = "e2e@test.com";
+const TEST_PASSWORD = "e2e-test-password";
+
+async function authenticate(page: import("@playwright/test").Page) {
+  await page.goto("/login");
+  await page.getByPlaceholder("Email").fill(TEST_EMAIL);
+  await page.getByPlaceholder("Password").fill(TEST_PASSWORD);
+  await page.getByRole("button", { name: "Sign in with email" }).click();
+  // Wait for redirect to /
+  await page.waitForURL("/", { timeout: 10000 });
+}
+
 test.describe("Todo CRUD", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    await authenticate(page);
 
     // Open category modal and delete all existing categories
     const manageBtn = page.getByRole("button", { name: "Manage categories" });
@@ -125,7 +137,7 @@ test.describe("Todo CRUD", () => {
 
 test.describe("Todo Categories", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    await authenticate(page);
 
     // Clean up todos
     const deleteButtons = page.getByRole("button", { name: "Delete todo" });

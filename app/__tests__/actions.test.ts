@@ -33,6 +33,14 @@ vi.mock("@/lib/prisma", () => ({
   prisma: mockPrisma,
 }));
 
+vi.mock("@/auth", () => ({
+  auth: vi.fn(() =>
+    Promise.resolve({ user: { id: "1", email: "test@example.com" } })
+  ),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
+
 describe("createTodo", () => {
   let createTodo: (formData: FormData) => Promise<void>;
 
@@ -51,7 +59,7 @@ describe("createTodo", () => {
     await createTodo(formData);
 
     expect(mockPrisma.todo.create).toHaveBeenCalledWith({
-      data: { title: "Buy groceries", priority: "MEDIUM", categoryId: null, dueDate: null, sortOrder: 1 },
+      data: { title: "Buy groceries", priority: "MEDIUM", categoryId: null, dueDate: null, sortOrder: 1, userId: 1 },
     });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/");
   });
@@ -64,7 +72,7 @@ describe("createTodo", () => {
     await createTodo(formData);
 
     expect(mockPrisma.todo.create).toHaveBeenCalledWith({
-      data: { title: "Walk the dog", priority: "MEDIUM", categoryId: null, dueDate: null, sortOrder: 1 },
+      data: { title: "Walk the dog", priority: "MEDIUM", categoryId: null, dueDate: null, sortOrder: 1, userId: 1 },
     });
   });
 
@@ -110,6 +118,7 @@ describe("createTodo", () => {
         categoryId: null,
         dueDate: new Date("2025-06-15T00:00:00.000Z"),
         sortOrder: 1,
+        userId: 1,
       },
     });
   });
@@ -129,6 +138,7 @@ describe("createTodo", () => {
         categoryId: null,
         dueDate: null,
         sortOrder: 1,
+        userId: 1,
       },
     });
   });
@@ -147,6 +157,7 @@ describe("createTodo", () => {
         categoryId: null,
         dueDate: null,
         sortOrder: 1,
+        userId: 1,
       },
     });
   });
@@ -172,10 +183,10 @@ describe("toggleTodo", () => {
     await toggleTodo(formData);
 
     expect(mockPrisma.todo.findUnique).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
     });
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
       data: { completed: true },
     });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/");
@@ -191,7 +202,7 @@ describe("toggleTodo", () => {
     await toggleTodo(formData);
 
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 2 },
+      where: { id: 2, userId: 1 },
       data: { completed: false },
     });
   });
@@ -235,7 +246,7 @@ describe("updateTodo", () => {
     await updateTodo(formData);
 
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
       data: { priority: "HIGH" },
     });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/");
@@ -250,7 +261,7 @@ describe("updateTodo", () => {
     await updateTodo(formData);
 
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
       data: { dueDate: new Date("2025-12-25T00:00:00.000Z") },
     });
   });
@@ -264,7 +275,7 @@ describe("updateTodo", () => {
     await updateTodo(formData);
 
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
       data: { dueDate: null },
     });
   });
@@ -278,7 +289,7 @@ describe("updateTodo", () => {
     await updateTodo(formData);
 
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
       data: {
         priority: "LOW",
         dueDate: new Date("2025-08-01T00:00:00.000Z"),
@@ -322,7 +333,7 @@ describe("deleteTodo", () => {
     await deleteTodo(formData);
 
     expect(mockPrisma.todo.delete).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
     });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/");
   });
@@ -361,19 +372,20 @@ describe("reorderTodo", () => {
     await reorderTodo(formData);
 
     expect(mockPrisma.todo.findMany).toHaveBeenCalledWith({
+      where: { userId: 1 },
       orderBy: { sortOrder: "asc" },
     });
     // Todo 1 moved after Todo 3: B(0), C(1), A(2)
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 2 },
+      where: { id: 2, userId: 1 },
       data: { sortOrder: 0 },
     });
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 3 },
+      where: { id: 3, userId: 1 },
       data: { sortOrder: 1 },
     });
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
       data: { sortOrder: 2 },
     });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/");
@@ -395,15 +407,15 @@ describe("reorderTodo", () => {
 
     // C moved to first: C(0), A(1), B(2)
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 3 },
+      where: { id: 3, userId: 1 },
       data: { sortOrder: 0 },
     });
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
       data: { sortOrder: 1 },
     });
     expect(mockPrisma.todo.update).toHaveBeenCalledWith({
-      where: { id: 2 },
+      where: { id: 2, userId: 1 },
       data: { sortOrder: 2 },
     });
   });
@@ -479,7 +491,7 @@ describe("createCategory", () => {
     await createCategory(formData);
 
     expect(mockPrisma.category.create).toHaveBeenCalledWith({
-      data: { name: "Work", colour: "#3B82F6" },
+      data: { name: "Work", colour: "#3B82F6", userId: 1 },
     });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/");
   });
@@ -492,7 +504,7 @@ describe("createCategory", () => {
     await createCategory(formData);
 
     expect(mockPrisma.category.create).toHaveBeenCalledWith({
-      data: { name: "Work", colour: "#3B82F6" },
+      data: { name: "Work", colour: "#3B82F6", userId: 1 },
     });
   });
 
@@ -543,7 +555,7 @@ describe("renameCategory", () => {
     await renameCategory(formData);
 
     expect(mockPrisma.category.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
       data: { name: "Office" },
     });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/");
@@ -594,7 +606,7 @@ describe("deleteCategory", () => {
     await deleteCategory(formData);
 
     expect(mockPrisma.category.delete).toHaveBeenCalledWith({
-      where: { id: 1 },
+      where: { id: 1, userId: 1 },
     });
     expect(mockRevalidatePath).toHaveBeenCalledWith("/");
   });

@@ -1,7 +1,19 @@
 import { test, expect } from "@playwright/test";
 
+const TEST_EMAIL = "e2e@test.com";
+const TEST_PASSWORD = "e2e-test-password";
+
+async function authenticate(page: import("@playwright/test").Page) {
+  await page.goto("/login");
+  await page.getByPlaceholder("Email").fill(TEST_EMAIL);
+  await page.getByPlaceholder("Password").fill(TEST_PASSWORD);
+  await page.getByRole("button", { name: "Sign in with email" }).click();
+  await page.waitForURL("/", { timeout: 10000 });
+}
+
 test.describe("Design system", () => {
   test.beforeEach(async ({ page }) => {
+    await authenticate(page);
     await page.goto("/ui");
   });
 

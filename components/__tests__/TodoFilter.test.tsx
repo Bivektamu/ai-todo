@@ -18,6 +18,7 @@ function makeTodo(overrides: Partial<{
   dueDate: Date | null;
   sortOrder: number;
   categoryId: number | null;
+  userId: number;
   createdAt: Date;
   updatedAt: Date;
 }> = {}) {
@@ -29,6 +30,7 @@ function makeTodo(overrides: Partial<{
     dueDate: null as Date | null,
     sortOrder: 0,
     categoryId: null as number | null,
+    userId: 1,
     createdAt: new Date("2025-01-01"),
     updatedAt: new Date("2025-01-01"),
     ...overrides,
