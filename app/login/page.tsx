@@ -1,8 +1,33 @@
-import { signIn } from "@/auth";
+import { signIn, auth } from "@/auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { redirect } from "next/navigation";
 
-export default function LoginPage() {
+const ERROR_MESSAGES: Record<string, string> = {
+  OAuthAccountNotLinked:
+    "This email is already registered with a different sign-in method. Sign in with your original method first, then link this account from the app.",
+  Configuration: "Authentication is not configured correctly. Check your environment variables.",
+  AccessDenied: "You denied the sign-in request. Try again if you change your mind.",
+  Verification: "The sign-in link has expired or has already been used.",
+  Default: "An unexpected authentication error occurred. Please try again.",
+};
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const session = await auth();
+  if (session?.user?.id) {
+    redirect("/");
+  }
+
+  const params = await searchParams;
+  const errorCode = params?.error;
+  const errorMessage = errorCode
+    ? ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default
+    : null;
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-6">
       <div className="w-full max-w-sm space-y-6 rounded-lg border border-border bg-surface p-8 shadow-sm">
@@ -15,12 +40,18 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {errorMessage && (
+          <div className="rounded-md border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
+            {errorMessage}
+          </div>
+        )}
+
         {/* OAuth providers */}
         <div className="space-y-3">
           <form
             action={async () => {
               "use server";
-              await signIn("google");
+              await signIn("google", { redirectTo: "/" });
             }}
           >
             <Button type="submit" variant="secondary" className="w-full">
@@ -37,7 +68,7 @@ export default function LoginPage() {
           <form
             action={async () => {
               "use server";
-              await signIn("github");
+              await signIn("github", { redirectTo: "/" });
             }}
           >
             <Button type="submit" variant="secondary" className="w-full">

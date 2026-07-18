@@ -15,17 +15,31 @@ if (!process.env.AUTH_SECRET || process.env.AUTH_SECRET.length < 32) {
   );
 }
 
+// The @auth/prisma-adapter passes string IDs (from JWTs) directly to Prisma,
+// but our schema uses autoincrement Int IDs. The Adapter interface types declare
+// id: string for UUID/cuid schemas, so we coerce to number at the boundary.
+const baseAdapter = PrismaAdapter(prisma);
+const intAdapter = {
+  ...baseAdapter,
+  getUser: (id: string) => (baseAdapter.getUser as any)(parseInt(id, 10)),
+  updateUser: (user: { id: string; [key: string]: unknown }) =>
+    (baseAdapter.updateUser as any)({ ...user, id: parseInt(user.id, 10) }),
+  deleteUser: (id: string) => (baseAdapter.deleteUser as any)(parseInt(id, 10)),
+} as typeof baseAdapter;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: intAdapter,
   session: { strategy: "jwt" },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       name: "credentials",
