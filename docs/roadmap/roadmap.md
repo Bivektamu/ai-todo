@@ -15,7 +15,7 @@ Build approach: Skateboard — ship the thinnest usable whole first, then thicke
 | 7 | Drag-and-drop reorder | Skateboard | medium | yes | done |
 | 8 | Todo categories | Skateboard | medium | yes | done |
 | 9 | Design system | Polish | full | yes | done |
-| 10 | Authentication system | Multi-user | full | yes | in-progress |
+| 10 | Authentication system | Multi-user | full | yes | done |
 
 ## Foundation
 
@@ -184,9 +184,9 @@ Weight: full
 
 ADR: [008-authentication-system](../adr/008-authentication-system/index.md)
 
-Code area: `app/actions.ts`, `app/page.tsx`, `app/login/page.tsx`, `app/api/auth/[...nextauth]/route.ts`, `auth.ts`, `middleware.ts`, `app/generated/prisma/schema.prisma`, `lib/prisma.ts`, `e2e/auth.spec.ts`
+Code area: `app/actions.ts`, `app/page.tsx`, `app/login/page.tsx`, `app/api/auth/[...nextauth]/route.ts`, `auth.ts`, `proxy.ts`, `app/generated/prisma/schema.prisma`, `lib/prisma.ts`, `e2e/auth.spec.ts`
 
-Status: in-progress
+Status: done
 
 - [x] Design it (ADR)
 - [x] Build it: `/develop authentication-system`
@@ -195,8 +195,8 @@ Status: in-progress
   - [x] Login page + sign out button (AC-5, AC-6)
   - [x] Email/password credentials (AC-3)
   - [x] Test updates: mock auth(), user scoping, E2E sign in (AC-8)
-- [ ] Verify it: `/verify authentication-system`
-- [ ] Test it: `/test authentication-system`
+- [x] Verify it: `/verify authentication-system`
+- [x] Test it: `/test authentication-system`
 
 ## Legend
 
