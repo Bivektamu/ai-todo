@@ -337,3 +337,24 @@ export async function deleteTodo(formData: FormData) {
     console.error("Failed to delete todo:", error);
   }
 }
+
+export async function signOutEverywhere() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return;
+  }
+  const userId = parseInt(session.user.id, 10);
+
+  try {
+    // Increment tokenVersion to invalidate all existing JWTs.
+    // Existing tokens remain valid until natural expiry (30 days);
+    // new sign-ins will embed the new version.
+    await prisma.user.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
+    revalidatePath("/");
+  } catch (error) {
+    console.error("Failed to sign out everywhere:", error);
+  }
+}

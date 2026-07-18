@@ -4,7 +4,16 @@ import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
+
+// Fail fast if AUTH_SECRET is missing or too short
+if (!process.env.AUTH_SECRET || process.env.AUTH_SECRET.length < 32) {
+  throw new Error(
+    "AUTH_SECRET is missing or too short (minimum 32 characters). " +
+    "Generate one with: npx auth secret"
+  );
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -32,6 +41,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const email = (credentials.email as string).toLowerCase().trim();
         const password = credentials.password as string;
 
+        // Reject excessively long inputs
+        if (email.length > 254 || password.length > 128) {
+          return null;
+        }
+
+        // Enforce minimum password length
+        if (password.length < 8) {
+          return null;
+        }
+
+        // Rate limit by email (5 attempts per 15 minute window)
+        if (!checkRateLimit(email)) {
+          return null;
+        }
+
         const user = await prisma.user.findUnique({
           where: { email },
         });
@@ -45,19 +69,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (!isValid) {
             return null;
           }
+          resetRateLimit(email);
           return { id: String(user.id), name: user.name, email: user.email, image: user.image };
         }
 
         // New user: create account (sign up is implicit on first credentials sign in)
+        // Wrap in try/catch to handle race condition: two concurrent requests
+        // with the same email both pass findUnique, the second create hits P2002.
         const passwordHash = await bcrypt.hash(password, 12);
-        const newUser = await prisma.user.create({
-          data: {
-            email,
-            passwordHash,
-          },
-        });
-
-        return { id: String(newUser.id), name: newUser.name, email: newUser.email, image: newUser.image };
+        try {
+          const newUser = await prisma.user.create({
+            data: {
+              email,
+              passwordHash,
+            },
+          });
+          resetRateLimit(email);
+          return { id: String(newUser.id), name: newUser.name, email: newUser.email, image: newUser.image };
+        } catch (error: any) {
+          if (error?.code === "P2002") {
+            // Duplicate email from a concurrent sign-up, treat as failed auth
+            return null;
+          }
+          throw error;
+        }
       },
     }),
   ],
@@ -66,9 +101,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account }) {
+      // Normalize email to lowercase for OAuth users to prevent case-collision
+      // with credentials accounts (which already normalize in authorize).
+      if (account?.provider !== "credentials" && user.email) {
+        const normalized = user.email.toLowerCase().trim();
+        if (normalized !== user.email) {
+          await prisma.user.update({
+            where: { id: parseInt(user.id!, 10) },
+            data: { email: normalized },
+          });
+          user.email = normalized;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
+      }
+      // Fetch tokenVersion from DB on sign-in to embed in JWT.
+      // Incrementing tokenVersion on the user record invalidates all
+      // future tokens (existing JWTs remain valid until natural expiry).
+      if (account && token.sub) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: parseInt(token.sub, 10) },
+          select: { tokenVersion: true },
+        });
+        if (dbUser) {
+          token.tokenVersion = dbUser.tokenVersion;
+        }
       }
       return token;
     },

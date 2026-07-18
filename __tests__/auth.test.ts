@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeAll } from "vitest";
+
+// Set AUTH_SECRET before auth.ts imports and validates it
+process.env.AUTH_SECRET = "test-secret-that-is-at-least-32-characters-long";
 
 const mockPrisma = {
   user: {
@@ -61,7 +65,7 @@ describe("auth.ts (Auth.js configuration)", () => {
   beforeAll(async () => {
     // Import triggers the NextAuth call which captures the config
     await import("@/auth");
-    savedCallArgs = mockNextAuth.mock.calls[0][0];
+    savedCallArgs = (mockNextAuth as any).mock.calls[0][0];
     const credsProvider = savedCallArgs.providers.find(
       (p: any) => p.id === "credentials"
     );
@@ -233,5 +237,45 @@ describe("auth.ts (Auth.js configuration)", () => {
       token: {},
     });
     expect(result).toEqual({ user: { name: "Test" } });
+  });
+
+  it("rejects passwords shorter than 8 characters (must-fix 3)", async () => {
+    const result = await authorizeFn({
+      email: "test@example.com",
+      password: "short",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("rejects email longer than 254 characters (should-harden 8)", async () => {
+    const longEmail = "a".repeat(250) + "@b.com";
+    const result = await authorizeFn({
+      email: longEmail,
+      password: "validpassword123",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("rejects password longer than 128 characters (should-harden 8)", async () => {
+    const result = await authorizeFn({
+      email: "test@example.com",
+      password: "a".repeat(129),
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null on concurrent sign-up race (P2002 unique constraint)", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    (bcrypt.hash as any).mockResolvedValue("hashed");
+    const p2002Error = Object.assign(new Error("Unique constraint"), { code: "P2002" });
+    mockPrisma.user.create.mockRejectedValue(p2002Error);
+
+    const result = await authorizeFn({
+      email: "racer@example.com",
+      password: "securepassword",
+    });
+
+    expect(result).toBeNull();
+    expect(mockPrisma.user.create).toHaveBeenCalled();
   });
 });

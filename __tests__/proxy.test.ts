@@ -1,5 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-
+import { describe, it, expect, vi, beforeEach } from "vitest";// @ts-nocheck -- mock types don't match NextResponse internal signatures
 const mockAuthFn = vi.fn();
 
 vi.mock("@/auth", () => ({
@@ -8,8 +7,11 @@ vi.mock("@/auth", () => ({
 
 vi.mock("next/server", () => ({
   NextResponse: {
-    redirect: vi.fn((url: URL) => ({ type: "redirect", url: url.toString() })),
-    next: vi.fn(() => ({ type: "next" })),
+    redirect: vi.fn((url: string | URL, _init?: number | ResponseInit) => ({
+      type: "redirect" as const,
+      url: url.toString(),
+    })),
+    next: vi.fn(() => ({ type: "next" as const })),
   },
 }));
 
@@ -62,7 +64,7 @@ describe("proxy.ts (route protection)", () => {
 
     const result = await handler(mockReq);
 
-    expect(NextResponse.redirect).toHaveBeenCalled();
+    expect(NextResponse.redirect as any).toHaveBeenCalled();
     const redirectArg = (NextResponse.redirect as any).mock.calls[0][0];
     expect(redirectArg.toString()).toContain("/login");
   });
@@ -90,6 +92,6 @@ describe("proxy.ts (route protection)", () => {
 
     const result = await handler(mockReq);
 
-    expect(NextResponse.next).toHaveBeenCalled();
+    expect(NextResponse.next as any).toHaveBeenCalled();
   });
 });
