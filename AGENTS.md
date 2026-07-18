@@ -20,7 +20,19 @@ Use the Prisma singleton from `lib/prisma.ts` for all database access. Server co
 
 ### Server actions
 
-All mutations live in `app/actions.ts` (marked `"use server"`). Each action calls `revalidatePath("/")` after mutating to refresh the page. Seven actions: `createTodo`, `toggleTodo`, `updateTodo` (priority, dueDate, and/or categoryId), `deleteTodo`, `reorderTodo`, `createCategory`, `renameCategory`, `deleteCategory`. The `updateTodo` action patches only the fields present in the form submission. Category actions validate name uniqueness and colour against a curated palette constant.
+All mutations live in `app/actions.ts` (marked `"use server"`). Every action calls `auth()` at the top to get the authenticated user and scopes all Prisma queries by `userId`. Each action calls `revalidatePath("/")` after mutating to refresh the page. Eight actions: `createTodo`, `toggleTodo`, `updateTodo` (priority, dueDate, and/or categoryId), `deleteTodo`, `reorderTodo`, `createCategory`, `renameCategory`, `deleteCategory`, `signOutEverywhere`. The `updateTodo` action patches only the fields present in the form submission. Category actions validate name uniqueness and colour against a curated palette constant.
+
+### Authentication
+
+Auth.js v5 with JWT sessions, Prisma adapter, and three providers: Google OAuth, GitHub OAuth, and email/password credentials. Route protection via `proxy.ts` (Next.js 16 convention; supersedes `middleware.ts`). The proxy redirects unauthenticated requests to `/login` with a matcher that excludes `/api/auth`, `/login`, static assets, and favicon.
+
+- **`auth.ts`**: Auth.js configuration with Prisma adapter, JWT strategy, three providers, callbacks that embed `userId` and `tokenVersion` in the JWT, and a `signIn` callback that normalizes OAuth email to lowercase.
+- **`proxy.ts`**: Route guard that wraps Auth.js `auth()`. Redirects unauthenticated requests to `/login`.
+- **`app/login/page.tsx`**: Login page with Google OAuth, GitHub OAuth, and email/password sign in forms. OAuth buttons use inline server actions; credentials form uses `signIn("credentials", formData)`.
+- **`app/api/auth/[...nextauth]/route.ts`**: Catch-all route handler exporting Auth.js GET/POST handlers.
+- **Credentials flow**: email is lowercased and trimmed; passwords must be ≥ 8 characters and ≤ 128 characters; inputs over 254 characters are rejected. Implicit sign up on first credentials sign in. Rate limited at 5 attempts per email per 15 minute window via `lib/rate-limit.ts`.
+- **Session revocation**: `signOutEverywhere` server action increments `tokenVersion` on the User record. New sign-ins embed the new version; existing JWTs remain valid until natural expiry (30 days).
+- **Security**: `AUTH_SECRET` must be ≥ 32 characters (validated at startup). bcryptjs at 12 rounds for password hashing. P2002 race condition on concurrent sign up is caught and returns `null`.
 
 ### Client components
 
@@ -48,7 +60,7 @@ When verifying features at runtime:
 
 ### Project docs
 
-- [docs/adr/](docs/adr/) — Architecture Decision Records (001 data model, 002 CRUD, 003 Neon migration, 004 enrichments, 005 drag-and-drop reorder, 006 categories, 007 design system)
+- [docs/adr/](docs/adr/) — Architecture Decision Records (001 data model, 002 CRUD, 003 Neon migration, 004 enrichments, 005 drag-and-drop reorder, 006 categories, 007 design system, 008 authentication system)
 - [docs/roadmap/](docs/roadmap/) — Feature roadmap (skateboard build approach)
 
 ### Testing
@@ -57,7 +69,8 @@ Test stack: Vitest (unit/component) + @testing-library/react + @testing-library/
 
 - **Unit/component tests**: run with `npx vitest run`. Test files are co-located in `__tests__/` next to source. Vitest config (`vitest.config.ts`) sets up jsdom environment, `@/*` path alias, and excludes `e2e/`.
 - **E2E tests**: run with `npx playwright test`. Tests live in `e2e/`. Playwright config (`playwright.config.ts`) starts the Next.js dev server automatically and reuses it if already running.
-- **Server action testing**: mock `next/cache` (revalidatePath) and `@/lib/prisma` using `vi.mock()`. Test each action's input validation (missing, empty, whitespace) and its happy path.
+- **Server action testing**: mock `next/cache` (revalidatePath), `@/lib/prisma`, and `@/auth` using `vi.mock()`. Set `process.env.AUTH_SECRET` before importing auth modules. Test each action's input validation (missing, empty, whitespace) and its happy path, including `userId` scoping in all Prisma call expectations.
+- **Auth testing**: mock `bcryptjs` and `next-auth` providers. The `authorize` function from the Credentials provider is testable by capturing the NextAuth config object on import. Test the `proxy.ts` handler by mocking `@/auth` to return authenticated or null auth objects.
 - **Component testing**: mock server action imports with `vi.mock("@/app/actions")`. Use `screen.getByRole` for accessible queries. When multiple elements share the same role+name, use `getAllByRole` with `.toHaveLength(N)`.
 - **E2E cleanup**: the database persists across test runs. Add a `beforeEach` that deletes all existing todos and categories before each test (use button iteration since there is no direct DB reset hook). For categories, open the "Manage categories" modal, iterate delete buttons, then close with Escape. When targeting a specific todo's buttons, scope to its `<li>` with `page.getByRole("listitem").filter({ hasText: "..." })` to avoid strict mode violations.
 
@@ -67,3 +80,4 @@ Test stack: Vitest (unit/component) + @testing-library/react + @testing-library/
 - **`npx prisma generate` output path**: the schema at `app/generated/prisma/schema.prisma` has `output = "."`. Running `prisma generate` from the project root resolves this relative to the schema file location, causing incorrect output. The generated client at `app/generated/prisma/` should be treated as the source of truth.
 - **`lib/prisma.ts` is not unit-testable in isolation**: it imports `@prisma/adapter-neon` which cannot be resolved by Vite/Vitest directly. The singleton's behavior is covered indirectly through actions integration tests.
 - **PowerShell vs cmd**: always wrap shell commands with `cmd /c` to avoid PowerShell issues with `&&`, `||`, `2>&1`, and pipes.
+- **`middleware.ts` is deprecated in Next.js 16**: use `proxy.ts` instead. Having both files present causes a startup error. The project uses `proxy.ts` for route protection.

@@ -1,6 +1,6 @@
 # ADR 008: Authentication system
 
-Status: In Progress
+Status: Accepted
 
 Date: 2026-07-18
 

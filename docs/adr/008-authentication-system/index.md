@@ -1,6 +1,6 @@
 # ADR 008: Authentication system
 
-Status: In Progress
+Status: Accepted
 
 Date: 2026-07-18
 
@@ -155,7 +155,7 @@ The build approach is **Skateboard**: ship OAuth first as the thinnest usable wh
 - [x] Create `auth.ts` with Auth.js config (Prisma adapter, JWT strategy, Google and GitHub providers)
 - [x] Set up `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, and `AUTH_SECRET` environment variables
 - [x] Create the `/api/auth/[...nextauth]` route handler
-- [ ] Verify OAuth sign in flow with Google and GitHub
+- [x] Verify OAuth sign in flow with Google and GitHub
 
 ### Milestone 3: Route protection and user scoping (AC-4, AC-5)
 
