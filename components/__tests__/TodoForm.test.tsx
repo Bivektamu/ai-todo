@@ -65,4 +65,20 @@ describe("TodoForm", () => {
     expect(dateInput).not.toBeNull();
     expect(dateInput).toHaveAttribute("name", "dueDate");
   });
+
+  // Accessibility: all inputs and selects have accessible names
+  it("title input has accessible name via aria-label", () => {
+    render(<TodoForm categories={[]} />);
+    expect(screen.getByRole("textbox", { name: "New todo title" })).toBeInTheDocument();
+  });
+
+  it("priority select has accessible name via aria-label", () => {
+    render(<TodoForm categories={[]} />);
+    expect(screen.getByRole("combobox", { name: "Priority" })).toBeInTheDocument();
+  });
+
+  it("date input has accessible name via aria-label", () => {
+    render(<TodoForm categories={[]} />);
+    expect(screen.getByLabelText("Due date")).toBeInTheDocument();
+  });
 });

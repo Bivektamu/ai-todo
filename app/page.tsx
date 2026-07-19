@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { signOut } from "@/auth";
+import { LandingPage } from "@/components/LandingPage";
 import { TodoForm } from "@/components/TodoForm";
 import { TodoFilter } from "@/components/TodoFilter";
 import { CategoryModal } from "@/components/CategoryModal";
@@ -10,13 +11,20 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Todo",
+  title: "Todo — Stay organized, one task at a time",
+  description:
+    "A simple, fast todo app with priorities, categories, and drag-and-drop reorder. Sign in to get started.",
+  openGraph: {
+    title: "Todo — Stay organized, one task at a time",
+    description:
+      "A simple, fast todo app with priorities, categories, and drag-and-drop reorder.",
+  },
 };
 
 export default async function Home() {
   const session = await auth();
   if (!session?.user?.id) {
-    return null;
+    return <LandingPage />;
   }
   const userId = parseInt(session.user.id, 10);
 
@@ -51,7 +59,7 @@ export default async function Home() {
             <form
               action={async () => {
                 "use server";
-                await signOut();
+                await signOut({ redirectTo: "/" });
               }}
             >
               <Button type="submit" variant="ghost" size="sm">

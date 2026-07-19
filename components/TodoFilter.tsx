@@ -153,6 +153,8 @@ export function TodoFilter({ todos, categories }: { todos: Todo[]; categories: C
                     return next;
                   });
                 }}
+                aria-pressed={active}
+                aria-label={`${active ? "Remove" : "Show"} ${cat.name} category`}
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors border ${
                   active
                     ? "text-white"
@@ -174,6 +176,8 @@ export function TodoFilter({ todos, categories }: { todos: Todo[]; categories: C
               key={s.key}
               type="button"
               onClick={() => setFilter(s.key)}
+              aria-pressed={filter === s.key}
+              aria-label={`Show ${s.label.toLowerCase()} todos`}
               className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                 filter === s.key
                   ? "bg-background text-foreground shadow-sm"
@@ -202,6 +206,10 @@ export function TodoFilter({ todos, categories }: { todos: Todo[]; categories: C
             ))}
           </Select>
         </div>
+      </div>
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {todos.length} todo{todos.length !== 1 ? "s" : ""} total
+        {filter !== "all" ? `, showing ${filteredSorted.length} ${filter}` : ""}
       </div>
       <TodoList
         todos={filteredSorted}

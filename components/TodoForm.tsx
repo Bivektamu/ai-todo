@@ -26,19 +26,20 @@ export function TodoForm({ categories }: { categories: Category[] }) {
           placeholder="What needs to be done?"
           required
           className="flex-1"
+          aria-label="New todo title"
         />
         <Button type="submit" variant="primary">
           Add
         </Button>
       </div>
       <div className="flex gap-2">
-        <Select name="priority" defaultValue="MEDIUM">
+        <Select name="priority" defaultValue="MEDIUM" aria-label="Priority">
           <option value="LOW">Low</option>
           <option value="MEDIUM">Medium</option>
           <option value="HIGH">High</option>
         </Select>
         {categories.length > 0 && (
-          <Select name="categoryId" defaultValue="">
+          <Select name="categoryId" defaultValue="" aria-label="Category">
             <option value="">No category</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
@@ -47,7 +48,7 @@ export function TodoForm({ categories }: { categories: Category[] }) {
             ))}
           </Select>
         )}
-        <Input type="date" name="dueDate" />
+        <Input type="date" name="dueDate" aria-label="Due date" />
       </div>
     </form>
   );

@@ -30,9 +30,9 @@ const PRIORITY_LABELS: Record<string, string> = {
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  LOW: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  MEDIUM: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-  HIGH: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  LOW: "bg-priority-low text-priority-low-fg",
+  MEDIUM: "bg-priority-medium text-priority-medium-fg",
+  HIGH: "bg-priority-high text-priority-high-fg",
 };
 
 function isOverdue(dueDate: Date | null): boolean {

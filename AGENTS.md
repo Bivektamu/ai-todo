@@ -43,10 +43,11 @@ Client components use `"use client"` and keep state minimal. Forms use the `acti
 See [components/ui/AGENTS.md](components/ui/AGENTS.md) for the full primer. In short:
 
 - Six reusable primitives live in `components/ui/`: **Button**, **Input**, **Badge**, **Select**, **Modal**, **Checkbox**.
-- Design tokens (background, surface, foreground, muted, border, primary, danger, success) are defined in `app/globals.css` via Tailwind CSS 4's `@theme` directive with light and dark overrides (`prefers-color-scheme`).
+- Design tokens (background, surface, foreground, muted, border, primary, danger, success, priority-low/medium/high plus foreground variants) are defined in `app/globals.css` via Tailwind CSS 4's `@theme` directive with light and dark overrides (`prefers-color-scheme`).
 - Every primitive supports `className` overrides, spreads standard HTML attributes, and has `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`.
 - A component catalogue is viewable at `/ui` (`app/ui/page.tsx`).
 - Use the primitives instead of ad hoc Tailwind classes for buttons, inputs, badges, selects, modals, and checkboxes.
+- All interactive elements (`<button>`, `<select>`, `<input>`) carry an accessible name via visible label or `aria-label`. Status toggle buttons have `aria-pressed`. Decorative SVGs use `aria-hidden="true"`. The Modal traps focus within its panel. The TodoFilter includes an `aria-live` region for screen reader announcements.
 
 ### Verification
 

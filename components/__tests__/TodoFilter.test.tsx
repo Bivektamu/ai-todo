@@ -42,9 +42,9 @@ describe("TodoFilter", () => {
   it("renders status filter buttons (covers: AC-3)", () => {
     render(<TodoFilter categories={[]} todos={[]} />);
 
-    expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Active" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Completed" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show all todos" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show active todos" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show completed todos" })).toBeInTheDocument();
   });
 
   it("renders sort dropdown (covers: AC-3)", () => {
@@ -57,7 +57,7 @@ describe("TodoFilter", () => {
   it("All button is selected by default", () => {
     render(<TodoFilter categories={[]} todos={[]} />);
 
-    const allBtn = screen.getByRole("button", { name: "All" });
+    const allBtn = screen.getByRole("button", { name: "Show all todos" });
     // The active pill has different styling; check it has the active class
     expect(allBtn.className).toContain("bg-background");
   });
@@ -73,7 +73,7 @@ describe("TodoFilter", () => {
     render(<TodoFilter categories={[]} todos={todos} />);
 
     // Click Active filter
-    await user.click(screen.getByRole("button", { name: "Active" }));
+    await user.click(screen.getByRole("button", { name: "Show active todos" }));
 
     expect(screen.getByText("Active todo")).toBeInTheDocument();
     expect(screen.queryByText("Done todo")).not.toBeInTheDocument();
@@ -88,7 +88,7 @@ describe("TodoFilter", () => {
 
     render(<TodoFilter categories={[]} todos={todos} />);
 
-    await user.click(screen.getByRole("button", { name: "Completed" }));
+    await user.click(screen.getByRole("button", { name: "Show completed todos" }));
 
     expect(screen.queryByText("Active todo")).not.toBeInTheDocument();
     expect(screen.getByText("Done todo")).toBeInTheDocument();
@@ -104,8 +104,8 @@ describe("TodoFilter", () => {
     render(<TodoFilter categories={[]} todos={todos} />);
 
     // First click Active to filter, then back to All
-    await user.click(screen.getByRole("button", { name: "Active" }));
-    await user.click(screen.getByRole("button", { name: "All" }));
+    await user.click(screen.getByRole("button", { name: "Show active todos" }));
+    await user.click(screen.getByRole("button", { name: "Show all todos" }));
 
     expect(screen.getByText("Active todo")).toBeInTheDocument();
     expect(screen.getByText("Done todo")).toBeInTheDocument();
@@ -132,5 +132,44 @@ describe("TodoFilter", () => {
     const options = screen.getAllByRole("option");
     const optionTexts = options.map((o) => (o as HTMLOptionElement).textContent);
     expect(optionTexts).toEqual(["Priority", "Due date", "Newest", "Custom", "Category"]);
+  });
+
+  // Accessibility: status filter buttons have aria-pressed and accessible names
+  it("status filter buttons have aria-pressed and accessible names", () => {
+    render(<TodoFilter categories={[]} todos={[]} />);
+
+    const allBtn = screen.getByRole("button", { name: "Show all todos" });
+    expect(allBtn).toHaveAttribute("aria-pressed", "true");
+
+    const activeBtn = screen.getByRole("button", { name: "Show active todos" });
+    expect(activeBtn).toHaveAttribute("aria-pressed", "false");
+
+    const completedBtn = screen.getByRole("button", { name: "Show completed todos" });
+    expect(completedBtn).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("aria-pressed updates when a different filter is selected", async () => {
+    const user = userEvent.setup();
+    render(<TodoFilter categories={[]} todos={[]} />);
+
+    await user.click(screen.getByRole("button", { name: "Show active todos" }));
+
+    expect(screen.getByRole("button", { name: "Show all todos" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Show active todos" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  // Accessibility: aria-live region announces todo count
+  it("aria-live region announces todo count", () => {
+    render(<TodoFilter categories={[]} todos={[]} />);
+    expect(screen.getByText("0 todos total")).toBeInTheDocument();
+  });
+
+  it("aria-live region updates count when todos exist", () => {
+    const todos = [
+      makeTodo({ id: 1, title: "First", completed: false }),
+      makeTodo({ id: 2, title: "Second", completed: true }),
+    ];
+    render(<TodoFilter categories={[]} todos={todos} />);
+    expect(screen.getByText("2 todos total")).toBeInTheDocument();
   });
 });

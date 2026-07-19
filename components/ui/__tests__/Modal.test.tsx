@@ -65,4 +65,43 @@ describe("Modal", () => {
     expect(screen.getByText("No title modal")).toBeInTheDocument();
     expect(screen.queryByRole("heading")).not.toBeInTheDocument();
   });
+
+  // Accessibility: focus trap — Tab cycles within focusable elements
+  it("traps focus inside the modal when Tab is pressed", async () => {
+    const user = userEvent.setup();
+    render(
+      <Modal open onClose={vi.fn()} title="Focus Trap">
+        <button type="button">First</button>
+        <button type="button">Last</button>
+      </Modal>
+    );
+
+    const firstBtn = screen.getByRole("button", { name: "First" });
+    const lastBtn = screen.getByRole("button", { name: "Last" });
+    const closeBtn = screen.getByLabelText("Close");
+
+    // Focus the last button, press Tab — should cycle back to first focusable (close button)
+    lastBtn.focus();
+    await user.tab();
+    // After Tab from last, focus should go to first (close button is first in DOM)
+    expect(closeBtn).toHaveFocus();
+  });
+
+  it("wraps focus back to last element on Shift+Tab from first", async () => {
+    const user = userEvent.setup();
+    render(
+      <Modal open onClose={vi.fn()} title="Focus Trap">
+        <button type="button">First</button>
+        <button type="button">Last</button>
+      </Modal>
+    );
+
+    const closeBtn = screen.getByLabelText("Close");
+    const lastBtn = screen.getByRole("button", { name: "Last" });
+
+    // Focus the close button (first focusable), press Shift+Tab — should wrap to last
+    closeBtn.focus();
+    await user.tab({ shift: true });
+    expect(lastBtn).toHaveFocus();
+  });
 });

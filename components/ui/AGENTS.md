@@ -6,7 +6,7 @@ Reusable base UI components built with pure Tailwind CSS 4. These primitives rep
 
 ## Design tokens
 
-Design tokens are defined centrally in `app/globals.css` via Tailwind CSS 4's `@theme` directive. Seven colour tokens (background, surface, foreground, muted, border, primary, danger, success) each have a light default and a dark override via `@media (prefers-color-scheme: dark)`. Primitives reference semantic tokens (`bg-surface`, `text-foreground`, `border-border`) rather than raw colour values, so dark mode works without per-component logic.
+Design tokens are defined centrally in `app/globals.css` via Tailwind CSS 4's `@theme` directive. Colour tokens (background, surface, foreground, muted, border, primary, danger, success, plus priority-low/medium/high with foreground variants) each have a light default and a dark override via `@media (prefers-color-scheme: dark)`. Primitives reference semantic tokens (`bg-surface`, `text-foreground`, `border-border`) rather than raw colour values, so dark mode works without per-component logic.
 
 ## Component conventions
 

@@ -16,6 +16,11 @@ Build approach: Skateboard — ship the thinnest usable whole first, then thicke
 | 8 | Todo categories | Skateboard | medium | yes | done |
 | 9 | Design system | Polish | full | yes | done |
 | 10 | Authentication system | Multi-user | full | yes | done |
+| 11 | Landing page | Growth | medium | yes | done |
+| 12 | Design token cleanup | Polish | lean | no | done |
+| 13 | Accessibility sweep | Polish | medium | no | done |
+| 14 | Loading states | Polish | lean | no | planned |
+| 15 | Responsive polish | Polish | lean | no | planned |
 
 ## Foundation
 
@@ -198,6 +203,31 @@ Status: done
 - [x] Verify it: `/verify authentication-system`
 - [x] Test it: `/test authentication-system`
 
+## Growth
+
+### 11. Landing page
+
+Intent: a public marketing landing page at `/` for unauthenticated visitors, replacing the current redirect to `/login`. Showcases the app's value with a hero section, feature highlights (priorities, categories, drag and drop), and a clear call to action to sign in.
+
+Done when: unauthenticated visitors see a landing page at `/` with a hero headline and tagline, a visual summary of key features, a "Get started" button linking to `/login`, and a footer. Authenticated users still see their todo dashboard. The proxy no longer redirects unauthenticated requests from `/`.
+
+Weight: medium
+
+Code area: `app/page.tsx`, `proxy.ts`, `app/login/page.tsx`
+
+ADR: [009-landing-page](../adr/009-landing-page.md)
+
+Status: done
+
+- [x] Design it (ADR)
+- [x] Build it: `/develop landing-page`
+  - [x] Proxy + routing: allow `/` through proxy, branch in page.tsx (AC-1, AC-2, AC-8, AC-9, AC-10)
+  - [x] Landing page UI: hero, feature cards, CTA, footer (AC-1, AC-3, AC-4, AC-5, AC-6)
+  - [x] SEO metadata (AC-7)
+  - [x] Tests: proxy, component, E2E (AC-1 through AC-10)
+- [x] Verify it: `/verify landing-page`
+- [x] Test it: `/test landing-page`
+
 ## Legend
 
 - **Weight**: lean (skip design-review and harden) · medium (normal path) · full (design-review and harden required)
@@ -249,3 +279,75 @@ Status: done
   - [x] Tests and verification (AC-1, AC-3, AC-5, AC-6)
 - [x] Verify it: `/verify design-system`
 - [x] Test it: `/test design-system`
+
+### 12. Design token cleanup
+
+Intent: migrate the two remaining files that use raw Tailwind colour classes to design tokens and UI primitives. The design system (ADR 007) integrated `TodoForm`, `TodoList`, `TodoFilter`, `CategoryModal`, and `page.tsx`, but `error.tsx` and the priority badge colours in `TodoList.tsx` were missed.
+
+Done when: `error.tsx` uses the Button primitive and `bg-surface` / `text-foreground` / `text-muted` tokens instead of raw `bg-zinc-*` / `text-zinc-*` classes; priority badge colours in `TodoList.tsx` use design token colours (or a documented exception); the error page renders identically at `/ui` and the dev server.
+
+Weight: lean
+
+Code area: `app/error.tsx`, `components/TodoList.tsx`
+
+Status: done
+
+- [x] `/develop design-token-cleanup`
+
+### 13. Accessibility sweep · done
+
+Intent: audit and fix the todo app for WCAG AA compliance. Every interactive control gets an accessible name, the drag-and-drop reorder becomes keyboard operable, focus is trapped in open modals, and screen readers receive meaningful announcements for state changes (todo added, completed, deleted, category changes).
+
+Done when: every `<button>`, `<select>`, and `<input>` has an accessible name (visible label or `aria-label`); drag handles announce their state and respond to Space/Enter and arrow keys; the CategoryModal traps focus when open and restores it on close; `aria-live` regions announce CRUD operations; axe DevTools or Playwright a11y checks pass with zero violations.
+
+Weight: medium
+
+Code area: `components/TodoList.tsx`, `components/TodoForm.tsx`, `components/TodoFilter.tsx`, `components/CategoryModal.tsx`, `components/ui/Modal.tsx`, `app/page.tsx`
+
+Status: done
+
+- [x] `/develop accessibility-sweep`
+
+### 14. Loading states
+
+Intent: add Suspense boundaries and `loading.tsx` skeletons so the app shows meaningful loading UI during page transitions and data fetches instead of a blank screen or layout shift.
+
+Done when: `app/loading.tsx` renders a skeleton mirroring the todo list layout (placeholder rows, disabled form); the category modal shows a spinner while categories load; Suspense boundaries wrap the todo list and category modal on the page; existing tests still pass.
+
+Weight: lean
+
+Code area: `app/loading.tsx`, `app/page.tsx`, `components/CategoryModal.tsx`
+
+Status: planned
+
+- [ ] `/develop loading-states`
+
+### 15. Responsive polish
+
+Intent: verify and fix the app's layout, touch targets, and readability across mobile (320 px), tablet (768 px), and desktop (1280 px) viewports. The existing Tailwind responsive classes are a good start but haven't been systematically audited.
+
+Done when: the filter bar wraps cleanly on narrow screens without overflow; all interactive controls have touch targets of at least 44×44 px on mobile; the landing page hero and feature cards stack vertically on mobile without text clipping; the category modal is usable on a 320 px screen; no horizontal scrollbar appears at any supported width.
+
+Weight: lean
+
+Code area: `app/page.tsx`, `components/TodoFilter.tsx`, `components/TodoList.tsx`, `components/TodoForm.tsx`, `components/LandingPage.tsx`, `app/globals.css`
+
+Status: planned
+
+- [ ] `/develop responsive-polish`
+
+## /roadmap complete
+
+**Mode**: replan
+
+**Reconciled**: all 11 existing features confirmed `done` or `existing`. No drift detected (code matches roadmap).
+
+**Enrolled from ADR follow-ups**:
+- **#12 Design token cleanup** (ADR 007): `error.tsx` and `TodoList` priority badges still use raw Tailwind colour classes instead of design tokens and primitives.
+- **#13 Accessibility sweep**: no prior a11y audit. WCAG AA baseline for interactive controls, keyboard navigation, focus management, and screen reader announcements.
+- **#14 Loading states**: no `loading.tsx` or Suspense boundaries. Adding skeleton UI for page transitions.
+- **#15 Responsive polish**: no systematic viewport audit. Touch targets, filter bar wrapping, landing page stacking.
+
+**Phasing**: all four in the Polish phase. Order: 12 → 13 → 14 → 15 (token cleanup first so the a11y sweep works on clean components, then additive loading states, then cross-cutting responsive pass).
+
+**Next**: `/develop design-token-cleanup` (lean, no ADR needed).

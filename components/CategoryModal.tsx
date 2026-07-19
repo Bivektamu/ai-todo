@@ -168,13 +168,14 @@ export function CategoryModal({ categories }: CategoryModalProps) {
                 key={c}
                 type="button"
                 onClick={() => setNewColour(c)}
+                aria-pressed={newColour === c}
                 className={`h-6 w-6 rounded-full border-2 transition-colors ${
                   newColour === c
                     ? "border-foreground scale-110"
                     : "border-transparent hover:scale-105"
                 }`}
                 style={{ backgroundColor: c }}
-                aria-label={`Colour ${c}`}
+                aria-label={`Select colour ${c}`}
               />
             ))}
           </div>

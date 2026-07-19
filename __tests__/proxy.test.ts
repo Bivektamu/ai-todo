@@ -59,6 +59,7 @@ describe("proxy.ts (route protection)", () => {
 
     const mockReq = {
       url: "http://localhost:3000/some-page",
+      nextUrl: { pathname: "/some-page" },
       auth: null,
     };
 
@@ -67,6 +68,33 @@ describe("proxy.ts (route protection)", () => {
     expect(NextResponse.redirect as any).toHaveBeenCalled();
     const redirectArg = (NextResponse.redirect as any).mock.calls[0][0];
     expect(redirectArg.toString()).toContain("/login");
+  });
+
+  it("allows unauthenticated requests to / through (covers: AC-1)", async () => {
+    vi.resetModules();
+    vi.doMock("@/auth", () => ({
+      auth: (...args: any[]) => {
+        const handler = args[0] as (req: any) => any;
+        return async (req: any) => {
+          Object.defineProperty(req, "auth", { value: null });
+          return handler(req);
+        };
+      },
+    }));
+
+    const proxyMod = await import("@/proxy");
+    const handler = proxyMod.default;
+
+    const mockReq = {
+      url: "http://localhost:3000/",
+      nextUrl: { pathname: "/" },
+      auth: null,
+    };
+
+    const result = await handler(mockReq);
+
+    expect(NextResponse.next as any).toHaveBeenCalled();
+    expect(NextResponse.redirect as any).not.toHaveBeenCalled();
   });
 
   it("allows authenticated requests through (covers: AC-5)", async () => {
